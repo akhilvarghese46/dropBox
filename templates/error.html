@@ -1,0 +1,38 @@
+{% extends "main.html" %}
+{% block content %}
+{%if return_url:%}
+<form method="post" action={{return_url}}>
+  <div id="errorMsg" class="errorMsgdiv">
+    <div class="msg-content">
+      <p>{{ error_message }}</p>
+      <button class="btncreate btn" style="width: 6%;background: #ff0e0e;margin-left: 69%;">Ok</button>
+    </div>
+
+  </div>
+</form>
+{% else: %}
+<div id="errorMsg" class="errorMsgdiv">
+  <div class="msg-content">
+    <span class="close">&times;</span>
+    <p>{{ error_message }}</p>
+  </div>
+</div>
+{%endif%}
+
+
+{% endblock %}
+{% block js %}
+<script>
+  var errorMsg = document.getElementById("errorMsg");
+  var span = document.getElementsByClassName("close")[0];
+  errorMsg.style.display = "block";
+  span.onclick = function() {
+    errorMsg.style.display = "none";
+  }
+  window.onclick = function(event) {
+    if (event.target == errorMsg) {
+      errorMsg.style.display = "none";
+    }
+  }
+</script>
+{% endblock %}

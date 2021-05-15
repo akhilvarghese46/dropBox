@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <title>Room{% block title %} {% endblock %}</title>
+  <script src="https://www.gstatic.com/firebasejs/ui/4.4.0/firebase-ui-auth.js"></script>
+  <link type="text/css" rel="stylesheet" href="https://www.gstatic.com/firebasejs/ui/4.4.0/firebase-ui-auth.css" />
+  <script src="https://www.gstatic.com/firebasejs/7.14.5/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/7.8.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/7.8.0/firebase-firestore.js"></script>
+  <script src="{{ url_for('static', filename='app-setup.js') }}"></script>
+  <link type="text/css" rel="stylesheet" href="{{ url_for('static',filename='style.css') }}">
+</head>
+
+<body>
+  <div class="maindiv">
+    <button id="sign-out" soutvalue="false" hidden="true">Sign out</button>
+    <div class="welcompage">
+      <div clas="div_heading">
+        <table style="width:100%;text-align:center;margin-left: 0%;">
+          <tr>
+            <td class="anglebutton"><a href="/addroom">Add Room</a></td>
+            <td class="anglebutton"><a href="/availableroomlist">Admin Added Room list</a></td>
+            <td class="anglebutton"><a href="/addroombookingSearch">Room Booking</a></td>
+            <td class="anglebutton"><a href="/bookedroomlist/AllType">Booked Room List</a></td>
+            <td class="anglebutton"><a href="/singnout">Sign Out </a></td>
+          </tr>
+        </table>
+      </div>
+      {% if user_data %}
+      {% if user_data.name %}
+      <p style="text-align:right"> Welcome to the Application - <br>{{ user_data.name}}</p>
+      {% elif user_data.email %}
+      <p style="text-align:right"> Welcome to the Application - <br>{{ user_data.email}}</p>
+      {% endif %}
+      {% else%}
+      <p style="text-align:right"> Welcome to the Application </p>
+      {% endif %}
+    </div>
+    <div class="container">
+      {% block content %}
+      <div class="datadiv">
+        <h3>Drop Box</h3>
+        <form method="post" action="">
+          <table border="1" style="width:40%; margin-left: 30%;">
+            {% if rooms|length == 0 %}
+            <tr>
+              <td colspan="4" style="text-align: center;">------ No Room found for booking. Please find other date ------</td>
+            </tr>
+            {% else: %}
+            {% for room in rooms %}
+            <tr>
+              <td>
+                <div class="roomData">
+                  <table>
+                    <tr>
+                      <td>Room Type: {{room.type}} Room</td>
+                    </tr>
+                    <tr>
+
+                      <td><img src="/static/{{room.type}}room.jpg" alt="roomimage" width="150px" height="100px">
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Room Name: {{room.name}}</td>
+                    </tr>
+                    <tr>
+                      <td>Room Price :{{room.price}}</td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <a class="anglebutton" style="width: 21%;background: white;color: black;" href="/addRoomBook?room={{room.name}}&&booking={{room}}">Select Room</a>
+                      </td>
+                    </tr>
+                  </table>
+                  <br>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+            {%endif%}
+          </table>
+        </form>
+        <br>
+        <br>
+      </div>
+      {% endblock %}
+    </div>
+  </div>
+
+  </div>
+  {% block js %}
+  {% endblock %}
+</body>
+
+</html>

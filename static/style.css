@@ -1,0 +1,195 @@
+body {
+  font-family: "helvetica", sans-serif;
+  justify-content: center;
+  align-items: center;
+  /*background: #d1d3d2;*/
+  background-image: url(/static/bgroompic.jpg);
+  position: relative;
+  /*opacity: 0.65;*/
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+.roomData {
+  padding-top: 12px;
+  border-radius: 7px;
+  background-color: #515151;
+  text-align: center;
+  font-weight: bold;
+  border: 5px solid white;
+}
+
+.datadiv {
+  font-size: 1em;
+  font-weight: 600;
+  color: #ffffff;
+  background-color: #a7a7a7;
+  width: 100%;
+  border: #a7a7a7;
+  border-radius: 7px;
+  opacity: .9;
+}
+
+h4 {
+  text-align: center;
+  font-size: 2em;
+  font-weight: 600;
+  width: 100%;
+}
+
+h3 {
+  text-align: center;
+  font-size: 1.5em;
+  font-weight: 600;
+  /* color: #f80707; */
+  /* background-color: #68e3e3; */
+  width: 97%;
+  border: 15px solid #a7a7a7;
+  border-radius: 7px;
+}
+
+.maindiv {
+  width: 92%;
+  height: 88%;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  border-radius: 10px;
+  overflow: hidden;
+  padding: 77px 55px 33px 55px;
+  transform: translate(-50%, -50%);
+}
+
+.anglebutton {
+  padding-top: 12px;
+  cursor: pointer;
+  width: 19%;
+  height: 37px;
+  border-radius: 7px;
+  background-color: #a7a7a7;
+  text-align: center;
+  display: inline-block;
+  font-weight: bold;
+  border: 5px solid white;
+}
+
+.container {
+  left: 38%;
+  margin-top: 12px;
+  width: 80%;
+  height: 80%;
+  margin-left: 11%;
+}
+
+.btn {
+  width: 100%;
+  height: 50px;
+  font-size: 20px;
+  font-family: Poppins-Medium;
+  color: #fff;
+  border-radius: 7px;
+  position: relative;
+  overflow: hidden;
+  background: rgb(10 38 81);
+}
+
+/* error message div */
+.errorMsgdiv {
+  display: none;
+  position: fixed;
+  z-index: 1;
+  padding-top: 100px;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgb(0, 0, 0);
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+.msg-content {
+  background-color: #f1c9c9;
+  margin: auto;
+  padding: 23px;
+  border: 1px solid #df0b0b;
+  width: 61%;
+  border-radius: 13px;
+  font-size: 19px;
+  font-weight: 900;
+}
+
+.close {
+  color: #aaaaaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+  color: #000;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.welcompage {
+  margin-top: -2%;
+  margin-left: -3%;
+  margin-right: -3%;
+  background: #a7a7a7;
+  border-radius: 7px;
+  color: #ffffff;
+}
+
+.validatemsg {
+  background-color: #c9f1d3 !important;
+  border: 5px solid #076620 !important;
+}
+
+.valbtn {
+  width: 10%;
+  background: #1d5f1d;
+}
+
+/* div scrol*/
+div.maindiv {
+  width: 92%;
+  height: 88%;
+  overflow: auto;
+}
+
+.divcenter {
+  padding: 10px 0px;
+  text-align: center;
+}
+
+select, input {
+  height: 27px;
+  border-color: #030303;
+  background-color: #ebebeb;
+  font-weight: bold;
+  /*text-transform: uppercase;*/
+}
+
+select {
+  width: 24%;
+  height: 32px;
+}
+
+th {
+  background-color: #dddddd;
+  color: #1e1691;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  /* table-layout: fixed; */
+  word-wrap: break-word;
+  margin-left: 5%;
+}
+
+a {
+  text-decoration: none;
+}
