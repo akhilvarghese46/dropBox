@@ -1,40 +1,19 @@
 
-class Room():
-    def __init__(self, name, type, price, req, adminname):
-        self.name = name
-        self.type = type
-        self.price = price
-        self.req = req
-        self.adminname = adminname
-        self.isbooked = 0
-
-    def set_properties(self, name, value):
-        setattr(self, name, value)
-
-
 class User():
-    def __init__(self, username, email, age, contactnum, gender, bookingId):
+    def __init__(self, username, email):
         self.username = username
         self.email = email
-        self.age = age
-        self.contactnum = contactnum
-        self.gender = gender
-        self.bookingId = bookingId
 
-    def set_properties(self, name, value):
-        setattr(self, name, value)
+class Directory():
+    def __init__(self, parent, dirname, size):
+        self.parent = parent
+        self.dirname = dirname
+        self.size = size
 
-class Booking():
-    def __init__(self, bookingKey, rmname, type, price, req, adduserfecilitiese, startdate, enddate, loginusername):
-        self.bookingKey = bookingKey
-        self.rmname = rmname
+class File():
+    def __init__(self, parent, filename, type, size, time):
+        self.parent = parent
+        self.filename = filename
         self.type = type
-        self.price = price
-        self.req = req
-        self.adduserfecilitiese = adduserfecilitiese
-        self.startdate = startdate
-        self.enddate = enddate
-        self.loginusername = loginusername
-
-    def set_properties(self, name, value):
-        setattr(self, name, value)
+        self.size = size
+        self.time = time
