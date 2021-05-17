@@ -42,8 +42,14 @@ def checkUserData():
 def addNewDirectory(directory):
     storage_client = storage.Client(project=local_constants.PROJECT_NAME)
     bucket = storage_client.bucket(local_constants.PROJECT_STORAGE_BUCKET)
-    blob = bucket.blob(directory.dirname)
-    blob.upload_from_string('', content_type='application/x-www-formurlencoded; charset=UTF-8')
+    blobList = storage_client.list_blobs(local_constants.PROJECT_STORAGE_BUCKET, prefix=directory.dirname)
+    blobNewList=[]
+    for i in blobList:
+        blobNewList.append(i)
+    if(len(blobNewList) == 0):
+        blob = bucket.blob(directory.dirname)
+        blob.upload_from_string('', content_type='application/x-www-formurlencoded; charset=UTF-8')
+    return len(blobNewList)
 
 def getBlobList(prefix):
     storage_client = storage.Client(project=local_constants.PROJECT_NAME)
@@ -128,10 +134,17 @@ def createNewFolder():
             #if newDirectoryName[len(newDirectoryName) - 1] != '/':
             newDirectoryName = currentDirectoryName + newDirectoryName + '/'
             directoryDetails = Directory(parent=currentDirectoryName, dirname=newDirectoryName, size=0)
-            addNewDirectory(directoryDetails)
+            returnvalue = addNewDirectory(directoryDetails)
+            error_message=''
+            if returnvalue != 0:
+                returnDirectoryName = currentDirectoryName
+                error_message = "This folder name is already created."
+            else:
+                returnDirectoryName = currentDirectoryName
+
             blobDetails = File(parent=currentDirectoryName, filename=currentDirectoryName,type=None, size=0, time=None)
             blobList = getBlobList(blobDetails)
-            return render_template("main.html", user_data=user_data, directoryList=blobList["directoryList"], fileList=blobList["fileList"], currentDirectoryPath = newDirectoryName)
+            return render_template("main.html",error_message=error_message, user_data=user_data, directoryList=blobList["directoryList"], fileList=blobList["fileList"], currentDirectoryPath = returnDirectoryName)
         except ValueError as exc:
             error_message = str(exc)
             return render_template("error.html", error_message=error_message)

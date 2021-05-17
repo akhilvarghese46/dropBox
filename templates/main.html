@@ -41,11 +41,22 @@
 
     </div>
     <div class="container">
-
+      <div id="errorMsg" class="errorMsgdiv">
+        <input type="hidden" name="errorHidden" id="errorHidden" value="{{error_message}}">
+        <div class="msg-content">
+          <span class="close">&times;</span>
+          <p>{{ error_message }}</p>
+        </div>
+      </div>
       <div class="datadiv">
         <h3>Drop Box</h3>
 
         <table style="width:40%;">
+          <tr>
+            <td>
+              <h3>Path:{{currentDirectoryPath.replace(user_data.email, "UserRootFolder")}}</h3>
+            </td>
+          </tr>
           <tr>
             <td><a id="createDir" href="#"><img src="/static/createdir.png" alt="Create Directory" width="40px" height="41px"></a></td>
           </tr>
