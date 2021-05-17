@@ -1,7 +1,7 @@
 {% extends "main.html" %}
 {% block content %}
 {%if return_url:%}
-<form method="post" action={{return_url}}>
+<form method="get" action={{return_url}}>
   <div id="errorMsg" class="errorMsgdiv">
     <div class="msg-content">
       <p>{{ error_message }}</p>

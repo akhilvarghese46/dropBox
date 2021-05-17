@@ -4,12 +4,15 @@
 <head>
   <title>DropBox{% block title %} {% endblock %}</title>
   <link rel="shortcut icon" href="/static/logo.png">
+  <script src="{{ url_for('static', filename='jquerymin.js') }}"></script>
   <script src="https://www.gstatic.com/firebasejs/ui/4.4.0/firebase-ui-auth.js"></script>
   <link type="text/css" rel="stylesheet" href="https://www.gstatic.com/firebasejs/ui/4.4.0/firebase-ui-auth.css" />
   <script src="https://www.gstatic.com/firebasejs/7.14.5/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/7.8.0/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/7.8.0/firebase-firestore.js"></script>
   <script src="{{ url_for('static', filename='app-setup.js') }}"></script>
+  <script src="{{ url_for('static', filename='script_2.js') }}"></script>
+
   <link type="text/css" rel="stylesheet" href="{{ url_for('static',filename='style.css') }}">
 </head>
 
@@ -29,8 +32,8 @@
       {% endif %}
     </div>
     <div class="sidenav">
-      <img src="/static/dropbox.png" alt="roomimage" width="50px" height="60px">
-      <a href="/addroom">Add Room</a>
+      <img src="/static/dropbox.png" alt="dropbox" width="50px" height="60px">
+      <a href="/">Home</a>
       <a href="/availableroomlist">Admin Added Room list</a>
       <a href="/addroombookingSearch">Room Booking</a>
       <a href="/bookedroomlist/AllType">Booked Room List</a>
@@ -38,23 +41,101 @@
 
     </div>
     <div class="container">
-      {% block content %}
+
       <div class="datadiv">
         <h3>Drop Box</h3>
-        <form method="post" action="">
-          <table border="1" style="width:40%; margin-left: 30%;">
-            {% if rooms|length == 0 %}
-            <tr>
-              <td colspan="4" style="text-align: center;">------ No Room found for booking. Please find other date ------</td>
-            </tr>
-            {% else: %}
 
-            {%endif%}
-          </table>
-        </form>
+        <table style="width:40%;">
+          <tr>
+            <td><a id="createDir" href="#"><img src="/static/createdir.png" alt="Create Directory" width="40px" height="41px"></a></td>
+          </tr>
+          <tr>
+            <td>Create Directory</td>
+          </tr>
+        </table>
+        <div id="myModal" class="modal">
+
+          <!-- Modal content -->
+          <div class="createFolder">
+
+            <span class="close">&times;</span>
+
+            <h2>Create Folder</h2>
+            <form method="post" action="/createNewFolder">
+              <table>
+                <tr>
+                  <td>
+                    <label>Folder Name</label>
+                  </td>
+                  <td>
+                    <input type="text" class="folderName" name="folderName" required placeholder="Folder Name">
+                    {%if currentDirectoryPath:%}
+                    <input type="hidden" name="currentDirectoryPath" value="{{currentDirectoryPath}}">
+                    {% else: %}
+                    <input type="hidden" name="currentDirectoryPath" value="">
+                    {%endif%}
+                  </td>
+                </tr>
+                <tr>
+                  <td></td>
+                  <td></td>
+                  <td>
+                    <b><button class="btncreate btn" style="width: 107%; background: #2e85ef;color: black;">Create</button></b>
+                  </td>
+                </tr>
+              </table>
+            </form>
+          </div>
+
+        </div>
+
         <br>
         <br>
       </div>
+      {% block content %}
+      <table style="width:40%; margin-left: 30%;">
+        <tr>
+          <th colspan="2">Name</th>
+          <th>Delete</th>
+        </tr>
+        {% if directoryList|length == 0 and fileList|length == 0%}
+        <tr>
+          <td colspan="4" style="text-align: center;">------ This folder is empty ------</td>
+        </tr>
+        {% else: %}
+
+
+        {% if directoryList|length != 0 %}
+        {% for dir in directoryList %}
+        <tr>
+          <td><a href="/openDirectory?dirName={{dir.name}}"><img src="/static/folder.png" alt="dropbox" width="40px" height="30px"></a></td>
+          <td>{{dir.name}}</td>
+          <td> <a href="/deletDir?dirName={{dir.name}}"><img src="/static/delete.png" alt="delete" width="29px" height="30px"></a></td>
+        </tr>
+        {% endfor %}
+        {%endif%}
+
+        {% if fileList|length != 0 %}
+        {% for file in fileList %}
+        <tr>
+          <td>{%if file.name.split('.')[file.name.split('.')|length-1] == "pdf":%}
+            <img src="/static/pdf.png" alt="file" width="30px" height="30px">
+            {% elif file.name.split('.')[file.name.split('.')|length-1] == "docx": %}
+            <img src="/static/docx.png" alt="file" width="33px" height="30px">
+            {% else: %}
+            <img src="/static/file.png" alt="file" width="33px" height="30px">
+            {%endif%}
+          </td>
+          <td>{{file.name}} {{file.name.split('.')[file.name.split('.')|length-1]}}</td>
+          <td> <a href="/deletFile?fileName={{file.name}}"><img src="/static/delete.png" alt="delete" width="29px" height="30px"></a></td>
+        </tr>
+        </tr>
+        {% endfor %}
+        {%endif%}
+
+
+        {%endif%}
+      </table>
       {% endblock %}
     </div>
   </div>

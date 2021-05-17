@@ -34,10 +34,38 @@ def checkUserData():
     if id_token:
         try:
             claims = google.oauth2.id_token.verify_firebase_token(id_token,firebase_request_adapter)
+            return claims
         except ValueError as exc:
-            return render_template("error.html", error_message=str(exc))
-            print(claims)
-    return claims
+            return None
+    return None
+
+def addNewDirectory(directory):
+    storage_client = storage.Client(project=local_constants.PROJECT_NAME)
+    bucket = storage_client.bucket(local_constants.PROJECT_STORAGE_BUCKET)
+    blob = bucket.blob(directory.dirname)
+    blob.upload_from_string('', content_type='application/x-www-formurlencoded; charset=UTF-8')
+
+def getBlobList(prefix):
+    storage_client = storage.Client(project=local_constants.PROJECT_NAME)
+    blobList = storage_client.list_blobs(local_constants.PROJECT_STORAGE_BUCKET, prefix=prefix.filename)
+    directory_list = []
+    file_list = []
+    returnValue = {}
+    for i in blobList:
+        if i.name != prefix.filename:
+             #print((i.name.split(''+prefix.parent))[1].split('/'))
+             dirData = (i.name.split(''+prefix.parent))[1].split('/')
+             if(len(dirData)==2 and dirData[1]==''):
+                 directory_list.append(i)
+             if(len(dirData)==1):
+                 file_list.append(i)
+             """ if i.name[len(i.name) - 1] == '/':
+                 directory_list.append(i)
+             else:
+                 file_list.append(i)"""
+    returnValue["directoryList"] = directory_list
+    returnValue["fileList"] = file_list
+    return returnValue
 
 def createDefaultDirectory(user_data):
     storage_client = storage.Client(project=local_constants.PROJECT_NAME)
@@ -45,21 +73,42 @@ def createDefaultDirectory(user_data):
     blob = bucket.blob(user_data["email"]+'/')
     blob.upload_from_string('', content_type='application/x-www-formurlencoded; charset=UTF-8')
 
+def deleteDirectory(directoryDetails):
+    storage_client = storage.Client(project=local_constants.PROJECT_NAME)
+    bucket = storage_client.bucket(local_constants.PROJECT_STORAGE_BUCKET)
+    blob = bucket.blob(directoryDetails.dirname)
+    blobList = storage_client.list_blobs(local_constants.PROJECT_STORAGE_BUCKET, prefix=directoryDetails.dirname)
+    blobNewList=[]
+    for i in blobList:
+        blobNewList.append(i)
+    if(len(blobNewList) == 1):
+        blob.delete()
+    return len(blobNewList)
+
+def deleteFile(fileDetails):
+    storage_client = storage.Client(project=local_constants.PROJECT_NAME)
+    bucket = storage_client.bucket(local_constants.PROJECT_STORAGE_BUCKET)
+    blob = bucket.blob(fileDetails.filename)
+    blob.delete()
+
 #root function is a default function
 @app.route('/')
 def root():
     user_data =checkUserData();
-    if user_data == None:
+    if not user_data:
         error_message = "Page not loaded! User Data is missing"
-        return render_template("index.html", user_data=user_data, error_message=error_message)
+        return render_template("index.html", user_data=None, error_message=error_message)
     else:
         try:
-            if user_data["email"] != None:
+            if user_data:
                 user_info = retrieveUserInfo(user_data)
                 if user_info == None:
                     createUserInfo(user_data)
                     createDefaultDirectory(user_data)
-                return render_template("main.html", user_data=user_data)
+
+                blobDetails = File(parent=user_data["email"]+'/', filename=user_data["email"]+'/',type=None, size=0, time=None)
+                blobList = getBlobList(blobDetails)
+                return render_template("main.html", user_data=user_data, directoryList=blobList["directoryList"], fileList=blobList["fileList"], currentDirectoryPath = user_data["email"]+'/')
             else:
                 error_message = "Page not loaded! User Data is missing"
                 return render_template("index.html", user_data=user_data, error_message=error_message)
@@ -67,6 +116,75 @@ def root():
             error_message = "Page not loaded! User Data is missing"
             return render_template("index.html", user_data=user_data, error_message=error_message)
 
+
+@app.route("/createNewFolder", methods=["GET", "POST"])
+def createNewFolder():
+    user_data =checkUserData();
+    if user_data != None:
+        try:
+            formData = dict(request.form)
+            newDirectoryName = formData.get("folderName")
+            currentDirectoryName = formData.get("currentDirectoryPath")
+            #if newDirectoryName[len(newDirectoryName) - 1] != '/':
+            newDirectoryName = currentDirectoryName + newDirectoryName + '/'
+            directoryDetails = Directory(parent=currentDirectoryName, dirname=newDirectoryName, size=0)
+            addNewDirectory(directoryDetails)
+            blobDetails = File(parent=currentDirectoryName, filename=currentDirectoryName,type=None, size=0, time=None)
+            blobList = getBlobList(blobDetails)
+            return render_template("main.html", user_data=user_data, directoryList=blobList["directoryList"], fileList=blobList["fileList"], currentDirectoryPath = newDirectoryName)
+        except ValueError as exc:
+            error_message = str(exc)
+            return render_template("error.html", error_message=error_message)
+    else:
+        error_message = "Page not loaded! User Data is missing"
+        return render_template("index.html", user_data=user_data, error_message=error_message)
+
+@app.route("/deletDir", methods=["GET", "POST"])
+def deletDirectory():
+    user_data =checkUserData();
+    if user_data != None:
+        currentDirectoryName = request.args.get('dirName')
+        directoryDetails = Directory(parent=currentDirectoryName, dirname=currentDirectoryName, size=0)
+        returnValue = deleteDirectory(directoryDetails)
+        if returnValue != 1:
+            error_message = "This directory already has some folders or files. So user can't delete this folder"
+            return render_template("error.html", error_message=error_message,return_url='/')
+        return redirect('/')
+    else:
+        error_message = "Page not loaded! User Data is missing"
+        return render_template("index.html", user_data=user_data, error_message=error_message)
+
+@app.route("/deletFile", methods=["GET", "POST"])
+def deletFiles():
+    user_data =checkUserData();
+    if user_data != None:
+        currentDirectoryName = request.args.get('fileName')
+        fileDetails =File(parent=currentDirectoryName, filename=currentDirectoryName,type=None, size=0, time=None)
+        deleteFile(fileDetails)
+        return redirect('/')
+    else:
+        error_message = "Page not loaded! User Data is missing"
+        return render_template("index.html", user_data=user_data, error_message=error_message)
+
+@app.route('/openDirectory' , methods=["GET", "POST"])
+def openDirectory():
+    user_data =checkUserData();
+    if not user_data:
+        error_message = "Page not loaded! User Data is missing"
+        return render_template("index.html", user_data=None, error_message=error_message)
+    else:
+        try:
+            if user_data:
+                currentDirectoryName = request.args.get('dirName')
+                blobDetails = File(parent=currentDirectoryName, filename=currentDirectoryName,type=None, size=0, time=None)
+                blobList = getBlobList(blobDetails)
+                return render_template("main.html", user_data=user_data, directoryList=blobList["directoryList"], fileList=blobList["fileList"], currentDirectoryPath = currentDirectoryName)
+            else:
+                error_message = "Page not loaded! User Data is missing"
+                return render_template("index.html", user_data=user_data, error_message=error_message)
+        except ValueError as exc:
+            error_message = "Page not loaded! User Data is missing"
+            return render_template("index.html", user_data=user_data, error_message=error_message)
 
 
 @app.route("/singnout", methods=["GET", "POST"])
