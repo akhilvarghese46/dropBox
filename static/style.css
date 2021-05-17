@@ -2,21 +2,10 @@ body {
   font-family: "helvetica", sans-serif;
   justify-content: center;
   align-items: center;
-  /*background: #d1d3d2;*/
-  background-image: url(/static/bgroompic.jpg);
   position: relative;
   /*opacity: 0.65;*/
   background-repeat: no-repeat;
   background-size: cover;
-}
-
-.roomData {
-  padding-top: 12px;
-  border-radius: 7px;
-  background-color: #515151;
-  text-align: center;
-  font-weight: bold;
-  border: 5px solid white;
 }
 
 .datadiv {
@@ -76,9 +65,9 @@ h3 {
 .container {
   left: 38%;
   margin-top: 12px;
-  width: 80%;
+  width: 90%;
   height: 80%;
-  margin-left: 11%;
+  margin-left: 9%;
 }
 
 .btn {
@@ -183,7 +172,6 @@ th {
 }
 
 table {
-  width: 100%;
   border-collapse: collapse;
   /* table-layout: fixed; */
   word-wrap: break-word;
@@ -192,4 +180,46 @@ table {
 
 a {
   text-decoration: none;
+}
+
+.sidenav {
+  height: 100%;
+  width: 160px;
+  position: fixed;
+  z-index: 1;
+  top: 0;
+  left: 0;
+  background-color: #d9d9d9;
+  overflow-x: hidden;
+  padding-top: 10%;
+}
+
+.sidenav a {
+  padding: 6px 8px 6px 16px;
+  text-decoration: none;
+  font-size: 25px;
+  color: black;
+  display: block;
+}
+
+.sidenav a:hover {
+  color: #f1f1f1;
+}
+
+.main {
+  margin-left: 160px;
+  /* Same as the width of the sidenav */
+  font-size: 28px;
+  /* Increased text to enable scrolling */
+  padding: 0px 10px;
+}
+
+@media screen and (max-height: 450px) {
+  .sidenav {
+    padding-top: 10%;
+  }
+
+  .sidenav a {
+    font-size: 18px;
+  }
 }

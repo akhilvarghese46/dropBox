@@ -53,16 +53,19 @@ def root():
         error_message = "Page not loaded! User Data is missing"
         return render_template("index.html", user_data=user_data, error_message=error_message)
     else:
-        if user_data["email"] != None:
-            user_info = retrieveUserInfo(user_data)
-            if user_info == None:
-                createUserInfo(user_data)
-                createDefaultDirectory(user_data)
-            return render_template("main.html", user_data=user_data)
-        else:
+        try:
+            if user_data["email"] != None:
+                user_info = retrieveUserInfo(user_data)
+                if user_info == None:
+                    createUserInfo(user_data)
+                    createDefaultDirectory(user_data)
+                return render_template("main.html", user_data=user_data)
+            else:
+                error_message = "Page not loaded! User Data is missing"
+                return render_template("index.html", user_data=user_data, error_message=error_message)
+        except ValueError as exc:
             error_message = "Page not loaded! User Data is missing"
             return render_template("index.html", user_data=user_data, error_message=error_message)
-
 
 
 
