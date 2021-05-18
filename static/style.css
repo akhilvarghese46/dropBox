@@ -243,6 +243,22 @@ a {
   color: black
 }
 
+.uTbId td {
+  width: 5em;
+  line-height: 2em;
+  background-color: #fff;
+  font-weight: bold;
+}
+
+.uTbId tr:hover {
+  color: #000;
+  background-color: #ebf3fe;
+}
+
+.uTbId tr:hover td {
+  background-color: transparent;
+}
+
 @media screen and (max-height: 450px) {
   .sidenav {
     padding-top: 10%;

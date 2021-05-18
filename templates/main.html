@@ -46,6 +46,9 @@
         <div class="msg-content">
           <span class="close">&times;</span>
           <p>{{ error_message }}</p>
+          {% if overwrite and overwrite==1 %}
+          <a class="anglebutton" style="color: black;" href="/overwriteFile?hiddenFileData={{hiddenFileData}}">Yes. Overwrite</a>
+          {%endif%}
         </div>
       </div>
       <div class="datadiv">
@@ -138,10 +141,14 @@
         <br>
       </div>
       {% block content %}
-      <table style="width:40%; margin-left: 30%;">
+      <br>
+      <br>
+      <table class="uTbId" style="width:40%; margin-left: 30%;">
         <tr>
-          <th colspan="2">Name</th>
-          <th>Delete</th>
+          <th style="width: 16%;"></th>
+          <th style="width: 20%;">Name</th>
+          <th style="width: 20%;">Download</th>
+          <th style="width: 20%;">Delete</th>
         </tr>
         {% if directoryList|length == 0 and fileList|length == 0%}
         <tr>
@@ -154,7 +161,8 @@
         {% for dir in directoryList %}
         <tr>
           <td><a href="/openDirectory?dirName={{dir.name}}"><img src="/static/folder.png" alt="dropbox" width="40px" height="30px"></a></td>
-          <td>{{dir.name}}</td>
+          <td style="text-align: center;"><a href="/openDirectory?dirName={{dir.name}}">{{dir.name.replace(currentDirectoryPath, "").replace('/', "")}}</a></td>
+          <td></td>
           <td> <a href="/deletDir?dirName={{dir.name}}"><img src="/static/delete.png" alt="delete" width="29px" height="30px"></a></td>
         </tr>
         {% endfor %}
@@ -171,9 +179,10 @@
             <img src="/static/file.png" alt="file" width="33px" height="30px">
             {%endif%}
           </td>
-          <td>{{file.name}} {{file.name.split('.')[file.name.split('.')|length-1]}}</td>
+          <td style="text-align: center;">{{file.name.replace(currentDirectoryPath, "").replace('/', "")}}</td>
+          <td><a href="/downloadFileDetails?fileName={{file.name}}"><img src="/static/download.png" alt="download" width="78px" height="62px"></a></td>
           <td> <a href="/deletFile?fileName={{file.name}}"><img src="/static/delete.png" alt="delete" width="29px" height="30px"></a></td>
-        </tr>
+
         </tr>
         {% endfor %}
         {%endif%}

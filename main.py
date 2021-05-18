@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, request, redirect, Response
 from google.auth.transport import requests
 import google.oauth2.id_token
 from datetime import datetime
@@ -60,10 +60,6 @@ def addNewFile(file):
     for i in blobList:
         if(i.name == file.parent + file.filename.filename):
             blobNewList.append(i)
-    print(file.parent+file.filename.filename)
-    print(len(blobNewList))
-    print("================1==============")
-
     if(len(blobNewList) == 0):
         blob.upload_from_file(file.filename)
     return len(blobNewList)
@@ -114,6 +110,27 @@ def deleteFile(fileDetails):
     bucket = storage_client.bucket(local_constants.PROJECT_STORAGE_BUCKET)
     blob = bucket.blob(fileDetails.filename)
     blob.delete()
+
+def downloadFile(fileDetails):
+    storage_client = storage.Client(project=local_constants.PROJECT_NAME)
+    bucket = storage_client.bucket(local_constants.PROJECT_STORAGE_BUCKET)
+    blob = bucket.blob(fileDetails.filename)
+    return blob.download_as_bytes()
+
+def overwriteUploadFile(file):
+    storage_client = storage.Client(project=local_constants.PROJECT_NAME)
+    bucket = storage_client.bucket(local_constants.PROJECT_STORAGE_BUCKET)
+    blob = bucket.blob(file.parent + file.filename.filename)
+    blobList = storage_client.list_blobs(local_constants.PROJECT_STORAGE_BUCKET, prefix=file.parent)
+    blobNewList=[]
+    for i in blobList:
+        if(i.name == file.parent + file.filename.filename):
+            blobNewList.append(i)
+    print(blobNewList)
+    print("===============================po")
+    #if(len(blobNewList) == 0):
+        #blob.upload_from_file(file.filename)
+    return len(blobNewList)
 
 #root function is a default function
 @app.route('/')
@@ -233,19 +250,76 @@ def uploadNewFile():
 
             fileDetails = File(parent=currentDirectoryName, filename=fileData ,type=None, size=0, time=None)
             returnvalue = addNewFile(fileDetails)
+            hiddenFileData = {}
             error_message=''
+            overwrite = 0
             if returnvalue != 0:
-                error_message = "This file is already exist."
-
+                hiddenFileData["fileData"] = fileData
+                hiddenFileData["fileName"] = uploadFileName
+                hiddenFileData["currentDirectoryName"]=currentDirectoryName
+                error_message = "This file is already exist. Do you want to overwrite?"
+                overwrite = 1
             blobDetails = File(parent=currentDirectoryName, filename=currentDirectoryName,type=None, size=0, time=None)
             blobList = getBlobList(blobDetails)
-            return render_template("main.html",error_message=error_message, user_data=user_data, directoryList=blobList["directoryList"], fileList=blobList["fileList"], currentDirectoryPath = currentDirectoryName)
+            return render_template("main.html",error_message=error_message, user_data=user_data, directoryList=blobList["directoryList"], fileList=blobList["fileList"], currentDirectoryPath = currentDirectoryName, overwrite=overwrite ,hiddenFileData=hiddenFileData)
         except ValueError as exc:
             error_message = str(exc)
             return render_template("error.html", error_message=error_message)
     else:
         error_message = "Page not loaded! User Data is missing"
         return render_template("index.html", user_data=user_data, error_message=error_message)
+
+@app.route("/downloadFileDetails", methods=["GET", "POST"])
+def downloadFileDetails():
+    user_data =checkUserData();
+    if user_data != None:
+        currentFileName = request.args.get('fileName')
+        fileDetails =File(parent=currentFileName, filename=currentFileName,type=None, size=0, time=None)
+        rval = downloadFile(fileDetails)
+        return Response(rval,mimetype='application/octet-stream')
+    else:
+        error_message = "Page not loaded! User Data is missing"
+        return render_template("index.html", user_data=user_data, error_message=error_message)
+
+@app.route("/overwriteFile", methods=["GET", "POST"])
+def overwriteFile():
+    user_data =checkUserData();
+    if user_data != None:
+        try:
+            fileDataDetails = request.args.get('hiddenFileData')
+            #fileDataDetails = fileDataDetails.replace("'", "\"")
+            #fileDataDetails=json.loads(fileDataDetails)
+            print(fileDataDetails.fileData)
+            print('oooooooooooooooooooooooooooooooooooo')
+            #if newDirectoryName[len(newDirectoryName) - 1] != '/':
+            #newDirectoryName = currentDirectoryName + newDirectoryName + '/'
+
+            fileDetails = File(parent=fileDataDetails.currentDirectoryName, filename=fileDataDetails.filedata ,type=None, size=0, time=None)
+            returnvalue = overwriteUploadFile(fileDetails)
+            """hiddenFileData = {}
+            error_message=''
+            overwrite = 0
+            if returnvalue != 0:
+                hiddenFileData["fileData"] = fileData
+                hiddenFileData["fileName"] = uploadFileName = formData.get("filename")
+                error_message = "This file is already exist. Do you want to overwrite?"
+                overwrite = 1
+            blobDetails = File(parent=currentDirectoryName, filename=currentDirectoryName,type=None, size=0, time=None)
+            blobList = getBlobList(blobDetails)
+            return render_template("main.html",error_message=error_message, user_data=user_data, directoryList=blobList["directoryList"], fileList=blobList["fileList"], currentDirectoryPath = currentDirectoryName, overwrite=overwrite ,hiddenFileData=hiddenFileData)
+                """
+            error_message = "Page not loaded! User Data is missing"
+            return render_template("index.html", user_data=user_data, error_message=error_message)
+        except ValueError as exc:
+            error_message = str(exc)
+            return render_template("error.html", error_message=error_message)
+    else:
+        error_message = "Page not loaded! User Data is missing"
+        return render_template("index.html", user_data=user_data, error_message=error_message)
+
+
+
+
 
 
 @app.route("/singnout", methods=["GET", "POST"])
