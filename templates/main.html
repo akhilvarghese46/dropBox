@@ -50,26 +50,24 @@
       </div>
       <div class="datadiv">
         <h3>Drop Box</h3>
-
+        <h3 style="text-align: left;">Path:{{currentDirectoryPath.replace(user_data.email, "UserRootFolder")}}</h3>
         <table style="width:40%;">
           <tr>
-            <td>
-              <h3>Path:{{currentDirectoryPath.replace(user_data.email, "UserRootFolder")}}</h3>
-            </td>
-          </tr>
-          <tr>
             <td><a id="createDir" href="#"><img src="/static/createdir.png" alt="Create Directory" width="40px" height="41px"></a></td>
+            <td><a id="fileUpload" href="#"><img src="/static/upload.png" alt="file upload" width="40px" height="41px"></a></td>
           </tr>
           <tr>
             <td>Create Directory</td>
+            <td>File Upload</td>
           </tr>
+
         </table>
         <div id="myModal" class="modal">
 
           <!-- Modal content -->
           <div class="createFolder">
 
-            <span class="close">&times;</span>
+            <span class="close2">&times;</span>
 
             <h2>Create Folder</h2>
             <form method="post" action="/createNewFolder">
@@ -92,6 +90,42 @@
                   <td></td>
                   <td>
                     <b><button class="btncreate btn" style="width: 107%; background: #2e85ef;color: black;">Create</button></b>
+                  </td>
+                </tr>
+              </table>
+            </form>
+          </div>
+
+        </div>
+
+        <div id="fileUploadModal" class="modal">
+
+          <!-- Modal content -->
+          <div class="uploadFile">
+
+            <span class="close3">&times;</span>
+
+            <h2>Upload File</h2>
+            <form method="post" action="/uploadNewFile" enctype="multipart/form-data">
+              <table>
+                <tr>
+                  <td>
+                    <label>Select file</label>
+                  </td>
+                  <td>
+                    <input type="file" id="filename" name="filename" required>
+                    {%if currentDirectoryPath:%}
+                    <input type="hidden" name="currentFileDirectoryPath" value="{{currentDirectoryPath}}">
+                    {% else: %}
+                    <input type="hidden" name="currentFileDirectoryPath" value="">
+                    {%endif%}
+                  </td>
+                </tr>
+                <tr>
+                  <td></td>
+                  <td></td>
+                  <td>
+                    <b><button class="btncreate btn" style="width: 107%; background: #2e85ef;color: black;">File upload</button></b>
                   </td>
                 </tr>
               </table>

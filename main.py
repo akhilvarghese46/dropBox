@@ -51,6 +51,24 @@ def addNewDirectory(directory):
         blob.upload_from_string('', content_type='application/x-www-formurlencoded; charset=UTF-8')
     return len(blobNewList)
 
+def addNewFile(file):
+    storage_client = storage.Client(project=local_constants.PROJECT_NAME)
+    bucket = storage_client.bucket(local_constants.PROJECT_STORAGE_BUCKET)
+    blob = bucket.blob(file.parent + file.filename.filename)
+    blobList = storage_client.list_blobs(local_constants.PROJECT_STORAGE_BUCKET, prefix=file.parent)
+    blobNewList=[]
+    for i in blobList:
+        if(i.name == file.parent + file.filename.filename):
+            blobNewList.append(i)
+    print(file.parent+file.filename.filename)
+    print(len(blobNewList))
+    print("================1==============")
+
+    if(len(blobNewList) == 0):
+        blob.upload_from_file(file.filename)
+    return len(blobNewList)
+
+
 def getBlobList(prefix):
     storage_client = storage.Client(project=local_constants.PROJECT_NAME)
     blobList = storage_client.list_blobs(local_constants.PROJECT_STORAGE_BUCKET, prefix=prefix.filename)
@@ -198,6 +216,36 @@ def openDirectory():
         except ValueError as exc:
             error_message = "Page not loaded! User Data is missing"
             return render_template("index.html", user_data=user_data, error_message=error_message)
+
+
+
+@app.route("/uploadNewFile", methods=["GET", "POST"])
+def uploadNewFile():
+    user_data =checkUserData();
+    if user_data != None:
+        try:
+            formData = dict(request.form)
+            currentDirectoryName = formData.get("currentFileDirectoryPath")
+            uploadFileName = formData.get("filename")
+            fileData = request.files['filename']
+            #if newDirectoryName[len(newDirectoryName) - 1] != '/':
+            #newDirectoryName = currentDirectoryName + newDirectoryName + '/'
+
+            fileDetails = File(parent=currentDirectoryName, filename=fileData ,type=None, size=0, time=None)
+            returnvalue = addNewFile(fileDetails)
+            error_message=''
+            if returnvalue != 0:
+                error_message = "This file is already exist."
+
+            blobDetails = File(parent=currentDirectoryName, filename=currentDirectoryName,type=None, size=0, time=None)
+            blobList = getBlobList(blobDetails)
+            return render_template("main.html",error_message=error_message, user_data=user_data, directoryList=blobList["directoryList"], fileList=blobList["fileList"], currentDirectoryPath = currentDirectoryName)
+        except ValueError as exc:
+            error_message = str(exc)
+            return render_template("error.html", error_message=error_message)
+    else:
+        error_message = "Page not loaded! User Data is missing"
+        return render_template("index.html", user_data=user_data, error_message=error_message)
 
 
 @app.route("/singnout", methods=["GET", "POST"])
