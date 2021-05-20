@@ -37,7 +37,7 @@
       <a href="/availableroomlist">Admin Added Room list</a>
       <a href="/addroombookingSearch">Room Booking</a>
       <a href="/bookedroomlist/AllType">Booked Room List</a>
-      <a href="/singnout">Sign Out </a>
+      <a href="/singnout" id="signOutWeb">Sign Out </a>
 
     </div>
     <div class="container">
@@ -137,6 +137,49 @@
 
         </div>
 
+
+        <div id="shareModel" class="modal">
+
+          <!-- Modal content -->
+          <div class="shareDir">
+
+            <span class="close4">&times;</span>
+
+            <h2>Share Directory</h2>
+            <form method="post" action="/shareDir">
+              <table>
+                <tr>
+                  <td>
+                    <label>User Email Id.</label>
+                  </td>
+                  <td>
+                    <input type="text" class="userEmailId" name="userEmailId" required placeholder="userEmailId">
+                    <input type="hidden" value="0" class="isDirectory" id="isDirectory" name="isDirectory">
+
+                    <input type="hidden" value="" class="hiddendir" id="hiddendir" name="hiddendir">
+                    {%if currentDirectoryPath:%}
+                    <input type="hidden" name="currentDirectoryPath" value="{{currentDirectoryPath}}">
+                    {% else: %}
+                    <input type="hidden" name="currentDirectoryPath" value="">
+                    {%endif%}
+                  </td>
+                </tr>
+                <tr>
+                  <td></td>
+                  <td></td>
+                  <td>
+                    <b><button class="btncreate btn" style="width: 107%; background: #2e85ef;color: black;">Share</button></b>
+                  </td>
+                </tr>
+              </table>
+            </form>
+          </div>
+
+        </div>
+
+
+
+
         <br>
         <br>
       </div>
@@ -147,6 +190,9 @@
         <tr>
           <th style="width: 16%;"></th>
           <th style="width: 20%;">Name</th>
+          <th style="width: 20%;">Created By</th>
+          <th style="width: 20%;">Shared By</th>
+          <th style="width: 20%;">Share</th>
           <th style="width: 20%;">Download</th>
           <th style="width: 20%;">Delete</th>
         </tr>
@@ -156,14 +202,17 @@
         </tr>
         {% else: %}
 
-
+        {{dtoryList}}
         {% if directoryList|length != 0 %}
         {% for dir in directoryList %}
         <tr>
           <td><a href="/openDirectory?dirName={{dir.name}}"><img src="/static/folder.png" alt="dropbox" width="40px" height="30px"></a></td>
           <td style="text-align: center;"><a href="/openDirectory?dirName={{dir.name}}">{{dir.name.replace(currentDirectoryPath, "").replace('/', "")}}</a></td>
+          <td>{{dir.owner}}</td>
+          <td>{% if dir.isShared == 0 %} {% else: %}{{dir.sharedBy}}{%endif%}</td>
+          <td><a id="d1share_{{dir.name}}" class="sharedir" href="#" value="{{dir.name}}"><img src="/static/share.png" alt="share" width="29px" height="30px"></a></td>
           <td></td>
-          <td> <a href="/deletDir?dirName={{dir.name}}"><img src="/static/delete.png" alt="delete" width="29px" height="30px"></a></td>
+          <td><a href="/deletDir?dirName={{dir.name}}"><img src="/static/delete.png" alt="delete" width="29px" height="30px"></a></td>
         </tr>
         {% endfor %}
         {%endif%}
@@ -180,6 +229,9 @@
             {%endif%}
           </td>
           <td style="text-align: center;">{{file.name.replace(currentDirectoryPath, "").replace('/', "")}}</td>
+          <td>{{file.owner}}</td>
+          <td>{% if file.isShared == 0 %} {% else: %}{{file.sharedBy}}{%endif%}</td>
+          <td><a id="d2share_{{file.name}}" class="sharedir" href="#" value="{{file.name}}"><img src="/static/share.png" alt="share" width="29px" height="30px"></a></td>
           <td><a href="/downloadFileDetails?fileName={{file.name}}"><img src="/static/download.png" alt="download" width="78px" height="62px"></a></td>
           <td> <a href="/deletFile?fileName={{file.name}}"><img src="/static/delete.png" alt="delete" width="29px" height="30px"></a></td>
 

@@ -1,9 +1,40 @@
 $(document).ready(function() {
+  var signoutvalue = document.getElementById('sign-out').getAttribute('soutvalue');
+  if (signoutvalue = true) {
+    ;
+    setTimeout(function() {
+      document.getElementById('sign-out').click();
+    }, 500);
+  }
+
   var errorLen = $("#errorHidden").val().length;
   var errorMsg = document.getElementById("errorMsg");
   if (errorLen > 0) {
     errorMsg.style.display = "block";
   }
+  $('.sharedir').click(function() {
+    id = this.id;
+    var value = id.split("share_");
+    if (value[0] == "d1") {
+      $('#isDirectory').val(1);
+    } else {
+      $('#isDirectory').val(2);
+    }
+    $('#hiddendir').val(value[1]);
+    var shareModel = document.getElementById("shareModel");
+    var span4 = document.getElementsByClassName("close4")[0];
+    shareModel.style.display = "block";
+    span4.onclick = function() {
+      shareModel.style.display = "none";
+    }
+
+    window.onclick = function(event) {
+      if (event.target == shareModel) {
+        shareModel.style.display = "none";
+      }
+    }
+
+  });
 
   $("#createDir").click(function() {
     var modal = document.getElementById("myModal");

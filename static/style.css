@@ -107,7 +107,7 @@ h3 {
   font-weight: 900;
 }
 
-.close, .close2, .close3 {
+.close, .close2, .close3, .close4 {
   color: #aaaaaa;
   float: right;
   font-size: 28px;
@@ -116,7 +116,8 @@ h3 {
 
 .close2:hover,
 .close2:focus, .close3:hover,
-.close3:focus {
+.close3:focus, .close4:hover,
+.close4:focus, {
   color: #000;
   text-decoration: none;
   cursor: pointer;
@@ -234,7 +235,7 @@ a {
 }
 
 /* Modal Content */
-.createFolder, .uploadFile {
+.createFolder, .uploadFile, .shareDir {
   background-color: #fefefe;
   margin: auto;
   padding: 20px;
