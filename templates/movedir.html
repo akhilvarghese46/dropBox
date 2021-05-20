@@ -1,0 +1,41 @@
+{% extends 'main.html' %}
+{% block content %}
+<div class="datadiv" style="width:92%;">
+  <h3>Move File:{{'root'+currentFile.split(user_data["email"])[1]}} => To</h3>
+  <form method="post" action="/moveDirectoryto?currentfile={{currentFile}}&&isDir={{isDir}}&&currentDirectoryPath={{currentDirectoryPath}}">
+    <table border="1" style="width:50%;margin-left: 23%;">
+      <tr>
+        <th>Select Directory Name</th>
+      </tr>
+      {% if directoryList|length == 0 %}
+      <tr>
+        <td colspan="3" style="text-align: center;">------ This folder is empty ------</td>
+      </tr>
+      {% else: %}
+
+      {% for dir in directoryList %}
+
+      {%if dir.name.split(user_data["email"]+"/Shared")|length != 2 and dir.name.split(currentFile)|length != 2 %}
+      <tr>
+        <td>
+          <label class="radiocontainer">{{'root'+dir.name.split(user_data["email"])[1]}}
+            <input type="radio" id="{{dir.name}}" name="movediractory" value="{{dir.name}}">
+            <span class="checkmark"></span>
+          </label>
+        </td>
+      <tr>
+        {%endif%}
+        {% endfor %}
+        {%endif%}
+        <br>
+        <br>
+    </table>
+    <br><br><br>
+    <button class="btncreate btn" style="width: 10%;  margin-left: 41%; background: #2e85ef;color: black;">Move</button>
+  </form>
+  <br>
+  <br>
+  <br>
+
+</div>
+{% endblock %}

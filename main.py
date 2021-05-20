@@ -257,12 +257,7 @@ def shareDirectory(directoryDetails):
         thisdirparent= newDirectoryName+thisdirparent[1]
         thisdirname = i["dirname"].split(directoryDetails.sharedBy+'/')
         thisdirnameval= newDirectoryName+thisdirname[1]
-        print("====gj===================")
-        print(i)
-        print(thisdirparent)
-        print(thisdirnameval)
-        print(i["parent"])
-        print("====gj===================")
+
         #print(thisdirnameval)
         dirNewDetails = Directory(parent=thisdirparent, dirname=thisdirnameval, size=0, owner=directoryDetails.owner, isShared=1, sharedBy=directoryDetails.sharedBy)
         rvalue = addNewDirectory(dirNewDetails)
@@ -306,32 +301,17 @@ def shareFile(flieDetails):
             creatednewdir = creatednewdir+filedir[a]+"/"
             createddirdetails.dirname = creatednewdir
             rvalue=addNewDirectory(createddirdetails)
-            """entity_key = datastore_client.key("Directory", creatednewdir)
-            entity = datastore.Entity(key=entity_key)
-            entity.update(createddirdetails.__dict__)
-            datastore_client.put(entity)"""
-            a += 1
-        #for i in filedir:
-            #print(i)
-        #print(flieDetails.parent)
-
-
-
-        #thisFileParent = flieDetails.parent.split(newDirectoryName)
-        #thisdirnameval= flieDetails.sharedBy+'/'+thisFileParent[1]
 
         thisFileName = flieDetails.filename.split(newDirectoryName)
         thisFileNameval= flieDetails.sharedBy+'/'+thisFileName[1]
         fileData = File(parent=flieDetails.parent, filename=thisFileNameval ,type=flieDetails.type, size=flieDetails.size, time=flieDetails.time ,owner=flieDetails.owner, isShared=1, sharedBy=flieDetails.sharedBy)
         rvalue = copyFile(fileData)
-        #print("kkkk")
+
     except ValueError as exc:
         print(exc)
     return '0'
 
 def copyFile(fileDetails):
-
-
     storage_client = storage.Client(project=local_constants.PROJECT_NAME)
     source_bucket = storage_client.bucket(local_constants.PROJECT_STORAGE_BUCKET)
     source_blob = source_bucket.blob(fileDetails.filename)
@@ -346,6 +326,91 @@ def copyFile(fileDetails):
     entity = datastore.Entity(key=entity_key)
     entity.update(fileDetails.__dict__)
     datastore_client.put(entity)
+
+def moveDirToNewLoc(directoryDetails):
+    try:
+        #rvalue=addNewDirectory(directoryDetails)
+        newmaindir =directoryDetails.dirname.split("/")
+        newmaindirlen = len(newmaindir)-2
+        newmaindirdata = directoryDetails.parent+newmaindir[newmaindirlen]+'/'
+        dirNewDetailsk = Directory(parent=directoryDetails.parent, dirname=newmaindirdata, size=0, owner=directoryDetails.owner, isShared=0, sharedBy="")
+        rvalue=addNewDirectory(dirNewDetailsk)
+        storage_client = storage.Client(project=local_constants.PROJECT_NAME)
+        bucket = storage_client.bucket(local_constants.PROJECT_STORAGE_BUCKET)
+        blob = bucket.blob(directoryDetails.dirname)
+
+        entity_key = datastore_client.key("Directory", directoryDetails.dirname)
+        datastore_client.delete(key=entity_key)
+        blob.delete()
+
+        blobDetails = File(parent=directoryDetails.dirname, filename=directoryDetails.dirname,type=None, size=0, time=None,owner=directoryDetails.owner, isShared=0, sharedBy='')
+        blobList = getAllDirList(blobDetails)
+
+        for i in blobList["directoryList"]:
+            nameDirDt =directoryDetails.dirname.split("/")
+            nameDirDtlen = len(nameDirDt)-2
+            newParentDirectoryary = i["parent"].split(directoryDetails.dirname)
+            newtDirectoryary = i["dirname"].split(directoryDetails.dirname)
+            newParentDirectory =directoryDetails.parent+newParentDirectoryary[1]
+            newtDirectory = directoryDetails.parent+newtDirectoryary[1]
+            newParentDirectory =directoryDetails.parent+nameDirDt[nameDirDtlen]+'/'+newParentDirectoryary[1]
+            newtDirectory = directoryDetails.parent+nameDirDt[nameDirDtlen]+'/'+newtDirectoryary[1]
+            dirNewDetails = Directory(parent=newParentDirectory, dirname=newtDirectory, size=0, owner=directoryDetails.owner, isShared=0, sharedBy="")
+            rvalue = addNewDirectory(dirNewDetails)
+
+            entity_key = datastore_client.key("Directory", i["dirname"])
+            datastore_client.delete(key=entity_key)
+            storage_client = storage.Client(project=local_constants.PROJECT_NAME)
+            bucket = storage_client.bucket(local_constants.PROJECT_STORAGE_BUCKET)
+            blob = bucket.blob(i["dirname"])
+            blob.delete()
+
+
+        for j in blobList["fileList"]:
+            nameDirDt =directoryDetails.dirname.split("/")
+            nameDirDtlen = len(nameDirDt)-2
+            newParentDirectoryary = j["parent"].split(directoryDetails.dirname)
+            newtDirectoryary = j["filename"].split(directoryDetails.dirname)
+            newParentDirectory =directoryDetails.parent+newParentDirectoryary[1]
+            newtDirectory = directoryDetails.parent+newtDirectoryary[1]
+            newParentDirectory =directoryDetails.parent+nameDirDt[nameDirDtlen]+'/'+newParentDirectoryary[1]
+            newtDirectory = directoryDetails.parent+nameDirDt[nameDirDtlen]+'/'+newtDirectoryary[1]
+            fileData = File(parent=newParentDirectory, filename=newtDirectory, type=j["type"], size=j["size"], time=j["time"] ,owner=directoryDetails.owner, isShared=0, sharedBy="")
+            fileMoveTo(fileData, j["filename"])
+            oldFileData = File(parent=j["parent"], filename=j["filename"], type=j["type"], size=j["size"], time=j["time"] ,owner=directoryDetails.owner, isShared=0, sharedBy="")
+            deleteFile(oldFileData)
+
+
+    except ValueError as exc:
+        print(exc)
+    return '1'
+
+def fileMoveTo(fileDetails, oldname):
+    storage_client = storage.Client(project=local_constants.PROJECT_NAME)
+    source_bucket = storage_client.bucket(local_constants.PROJECT_STORAGE_BUCKET)
+    source_blob = source_bucket.blob(oldname)
+    destination_bucket = storage_client.bucket(local_constants.PROJECT_STORAGE_BUCKET)
+    blob_copy = source_bucket.copy_blob(source_blob, destination_bucket, fileDetails.filename)
+
+    entity_key = datastore_client.key("file", fileDetails.filename)
+    entity = datastore.Entity(key=entity_key)
+    entity.update(fileDetails.__dict__)
+    datastore_client.put(entity)
+
+def moveFileNewLoc(flieDetails):
+    try:
+        newmaindir =flieDetails.filename.split("/")
+        newmaindirlen = len(newmaindir)-1
+        newFileData = flieDetails.parent+newmaindir[newmaindirlen]
+        print(newFileData)
+        fileData = File(parent=flieDetails.parent, filename=newFileData ,type=flieDetails.type, size=flieDetails.size, time=flieDetails.time ,owner=flieDetails.owner, isShared=0, sharedBy="")
+        fileMoveTo(fileData, flieDetails.filename)
+        deleteFile(flieDetails)
+
+    except ValueError as exc:
+        print(exc)
+    return '1'
+
 
 #root function is a default function
 @app.route('/')
@@ -411,7 +476,10 @@ def deletDirectory():
         returnValue = deleteDirectory(directoryDetails)
         if returnValue != 1:
             error_message = "This directory already has some folders or files. So user can't delete this folder"
-            return render_template("error.html", error_message=error_message,return_url='/')
+            blobDetails = File(parent=currentDirectoryName, filename=currentDirectoryName,type=None, size=0, time=None,owner=user_data["email"], isShared=0, sharedBy='')
+            blobList = getBlobList(blobDetails)
+            return render_template("main.html",error_message=error_message, user_data=user_data, directoryList=blobList["directoryList"], fileList=blobList["fileList"], currentDirectoryPath = currentDirectoryName)
+            #return render_template("error.html", error_message=error_message, return_url='/,\',currentDirectoryPath=currentDirectoryName,user_data=user_data)
         return redirect('/')
     else:
         error_message = "Page not loaded! User Data is missing"
@@ -581,6 +649,64 @@ def shareDir():
             error_message = "Page not loaded! User Data is missing"
             return render_template("index.html", user_data=user_data, error_message=error_message)
 
+@app.route('/moveDir' , methods=["GET", "POST"])
+def moveDirectory():
+    user_data =checkUserData();
+    if not user_data:
+        error_message = "Page not loaded! User Data is missing"
+        return render_template("index.html", user_data=None, error_message=error_message)
+    else:
+        try:
+            currentDirName = request.args.get('dirName')
+            isDir = request.args.get('isDir')
+            currentDirectoryPath =  request.args.get('currentDirectoryPath')
+            blobDetails = File(parent=user_data["email"]+"/", filename=user_data["email"]+"/",type=None, size=0, time=None,owner=user_data["email"], isShared=0, sharedBy='')
+            blobList = getAllDirList(blobDetails)
+            return render_template("movedir.html", user_data=user_data, directoryList=blobList["directoryList"], currentFile = currentDirName, isDir=isDir, currentDirectoryPath=currentDirectoryPath)
+        except ValueError as exc:
+            error_message = "Page not loaded! User Data is missing"
+            return render_template("index.html", user_data=user_data, error_message=error_message)
+
+@app.route('/moveDirectoryto' , methods=["GET", "POST"])
+def moveDirectoryto():
+    user_data =checkUserData();
+    if not user_data:
+        error_message = "Page not loaded! User Data is missing"
+        return render_template("index.html", user_data=None, error_message=error_message)
+    else:
+        try:
+            currentDirectory = request.args.get('currentfile')
+            isDir = request.args.get('isDir')
+            currentDirectoryPath =  request.args.get('currentDirectoryPath')
+            formData = dict(request.form)
+            moveLocation = formData.get("movediractory")
+
+            if isDir == '1':
+                directoryDetails = Directory(parent=moveLocation, dirname=currentDirectory, size=0,owner=user_data["email"], isShared=0, sharedBy="")
+                returnvalue = moveDirToNewLoc(directoryDetails)
+                error_message=''
+                if returnvalue != 0:
+                    returnDirectoryName = currentDirectory
+                    error_message = "This folder is successfully moved!"
+                else:
+                    returnDirectoryName = currentDirectory
+            elif isDir == '2':
+
+                fileDetails = File(parent=moveLocation, filename=currentDirectory,type=None, size=0, time=None,owner=user_data["email"], isShared=0, sharedBy="")
+                returnvalue = moveFileNewLoc(fileDetails)
+                error_message=''
+                if returnvalue != 0:
+                    returnDirectoryName = currentDirectory
+                    error_message = "This File is successfully moved!"
+                else:
+                    returnDirectoryName = currentDirectory
+            #blobDetails = File(parent=moveLocation, filename=moveLocation,type=None, size=0, time=None,owner=user_data["email"], isShared=0, sharedBy='')
+            #blobList = getBlobList(blobDetails)
+            #return render_template("main.html",error_message=error_message, user_data=user_data, directoryList=blobList["directoryList"], fileList=blobList["fileList"], currentDirectoryPath = moveLocation)
+            return redirect('/')
+        except ValueError as exc:
+            error_message = "Page not loaded! User Data is missing"
+            return render_template("index.html", user_data=user_data, error_message=error_message)
 
 
 
