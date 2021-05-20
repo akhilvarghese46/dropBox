@@ -208,11 +208,11 @@
         <tr>
           <td><a href="/openDirectory?dirName={{dir.name}}"><img src="/static/folder.png" alt="dropbox" width="40px" height="30px"></a></td>
           <td style="text-align: center;"><a href="/openDirectory?dirName={{dir.name}}">{{dir.name.replace(currentDirectoryPath, "").replace('/', "")}}</a></td>
-          <td>{{dir.owner}}</td>
-          <td>{% if dir.isShared == 0 %} {% else: %}{{dir.sharedBy}}{%endif%}</td>
-          <td><a id="d1share_{{dir.name}}" class="sharedir" href="#" value="{{dir.name}}"><img src="/static/share.png" alt="share" width="29px" height="30px"></a></td>
+          <td>{% if dir.isShared == 0 %}{%if dir.owner.split("@")|length == 2%}{{dir.owner.split("@")[0]}}{% else: %} {{dir.owner}}{%endif%} {% else: %}{%endif%}</td>
+          <td>{% if dir.isShared == 0 %} {% else: %}{%if dir.sharedBy.split("@")|length == 2%}{{dir.sharedBy.split("@")[0]}}{% else: %} {{dir.sharedBy}}{%endif%}{%endif%}</td>
+          <td>{% if dir.isShared == 0 %}<a id="d1share_{{dir.name}}" class="sharedir" href="#" value="{{dir.name}}"><img src="/static/share.png" alt="share" width="29px" height="30px"></a>{%endif%}</td>
           <td></td>
-          <td><a href="/deletDir?dirName={{dir.name}}"><img src="/static/delete.png" alt="delete" width="29px" height="30px"></a></td>
+          <td>{% if dir.isShared == 0 %}<a href="/deletDir?dirName={{dir.name}}"><img src="/static/delete.png" alt="delete" width="29px" height="30px"></a>{%endif%}</td>
         </tr>
         {% endfor %}
         {%endif%}
@@ -229,11 +229,11 @@
             {%endif%}
           </td>
           <td style="text-align: center;">{{file.name.replace(currentDirectoryPath, "").replace('/', "")}}</td>
-          <td>{{file.owner}}</td>
-          <td>{% if file.isShared == 0 %} {% else: %}{{file.sharedBy}}{%endif%}</td>
-          <td><a id="d2share_{{file.name}}" class="sharedir" href="#" value="{{file.name}}"><img src="/static/share.png" alt="share" width="29px" height="30px"></a></td>
-          <td><a href="/downloadFileDetails?fileName={{file.name}}"><img src="/static/download.png" alt="download" width="78px" height="62px"></a></td>
-          <td> <a href="/deletFile?fileName={{file.name}}"><img src="/static/delete.png" alt="delete" width="29px" height="30px"></a></td>
+          <td>{% if file.owner == 0 %}{%if file.owner.split("@")|length == 2%}{{file.owner.split("@")[0]}}{% else: %} {{file.owner}}{%endif%} {% else: %}{%endif%}</td>
+          <td>{% if file.isShared == 0 %} {% else: %}{%if file.sharedBy.split("@")|length == 2%}{{file.sharedBy.split("@")[0]}}{% else: %} {{file.sharedBy}}{%endif%}{%endif%}</td>
+          <td>{% if file.isShared == 0 %}<a id="d2share_{{file.name}}" class="sharedir" href="#" value="{{file.name}}"><img src="/static/share.png" alt="share" width="29px" height="30px"></a>{%endif%}</td>
+          <td>{% if file.isShared == 0 %}<a href="/downloadFileDetails?fileName={{file.name}}"><img src="/static/download.png" alt="download" width="78px" height="62px"></a>{%endif%}</td>
+          <td> {% if file.isShared == 0 %}<a href="/deletFile?fileName={{file.name}}"><img src="/static/delete.png" alt="delete" width="29px" height="30px"></a>{%endif%}</td>
 
         </tr>
         {% endfor %}

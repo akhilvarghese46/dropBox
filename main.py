@@ -90,8 +90,11 @@ def getBlobList(prefix):
     dirrectryqry = datastore_client.query(kind="Directory")
     dirrectryqry = dirrectryqry.add_filter('owner', '=', prefix.owner)
     dirrectryqry = dirrectryqry.add_filter('parent', '=', prefix.filename).fetch()
+
+
     for k in dirrectryqry:
         dirqrlist.append(k)
+
     fileqry = datastore_client.query(kind="file")
     fileqry = fileqry.add_filter('owner', '=', prefix.owner)
     fileqry = fileqry.add_filter('parent', '=', prefix.filename).fetch()
@@ -102,10 +105,16 @@ def getBlobList(prefix):
     returnValue = {}
     try:
         for i in blobList:
+
+
             if i.name != prefix.filename:
+
                  dirData = (i.name.split(''+prefix.parent))[1].split('/')
+
                  if(len(dirData)==2 and dirData[1]==''):
+
                      for j in dirqrlist:
+
                          if(i.name==j["dirname"]):
                               j["name"] = i.name
                               directory_list.append(j)
@@ -116,6 +125,46 @@ def getBlobList(prefix):
                          j["name"] = i.name
                          directory_list.append(j)"""
                  if(len(dirData)==1):
+                     for l in fileqrlist:
+                         if(i.name==l["filename"]):
+                              l["name"] = i.name
+                              file_list.append(l)
+
+        returnValue["directoryList"] = directory_list
+        returnValue["fileList"] = file_list
+    except ValueError as exc:
+        print(exc)
+    return returnValue
+
+def getAllDirList(prefix):
+    storage_client = storage.Client(project=local_constants.PROJECT_NAME)
+    blobList = storage_client.list_blobs(local_constants.PROJECT_STORAGE_BUCKET, prefix=prefix.filename)
+
+    dirqrlist=[]
+    fileqrlist=[]
+    dirrectryqry = datastore_client.query(kind="Directory")
+    dirrectryqry = dirrectryqry.add_filter('owner', '=', prefix.owner).fetch()
+
+    for k in dirrectryqry:
+        dirqrlist.append(k)
+    fileqry = datastore_client.query(kind="file")
+    fileqry = fileqry.add_filter('owner', '=', prefix.owner).fetch()
+    for j in fileqry:
+        fileqrlist.append(j)
+    directory_list = []
+    file_list = []
+    returnValue = {}
+    try:
+        for i in blobList:
+
+            if i.name != prefix.filename:
+                 dirData = (i.name.split(''+prefix.parent))[1].split('/')
+                 if(dirData[len(dirData)-1]==''):
+                     for j in dirqrlist:
+                         if(i.name==j["dirname"]):
+                              j["name"] = i.name
+                              directory_list.append(j)
+                 else:
                      for l in fileqrlist:
                          if(i.name==l["filename"]):
                               l["name"] = i.name
@@ -143,6 +192,8 @@ def deleteDirectory(directoryDetails):
         blobNewList.append(i)
     if(len(blobNewList) == 1):
         blob.delete()
+        entity_key = datastore_client.key("Directory", directoryDetails.dirname)
+        datastore_client.delete(key=entity_key)
     return len(blobNewList)
 
 def deleteFile(fileDetails):
@@ -150,6 +201,9 @@ def deleteFile(fileDetails):
     bucket = storage_client.bucket(local_constants.PROJECT_STORAGE_BUCKET)
     blob = bucket.blob(fileDetails.filename)
     blob.delete()
+
+    entity_key = datastore_client.key("file", fileDetails.filename)
+    datastore_client.delete(key=entity_key)
 
 def downloadFile(fileDetails):
     storage_client = storage.Client(project=local_constants.PROJECT_NAME)
@@ -192,24 +246,34 @@ def shareDirectory(directoryDetails):
     #print(orginalDirectory)
 
     blobDetails = File(parent=orginalDirectory, filename=orginalDirectory,type=None, size=0, time=None,owner=directoryDetails.sharedBy, isShared=0, sharedBy='')
-    blobList = getBlobList(blobDetails)
+    #blobList = getBlobList(blobDetails)
+    blobList = getAllDirList(blobDetails)
+
     #print(blobList["directoryList"])
     for i in blobList["directoryList"]:
-        #print(i)
-        thisdirparent = directoryDetails.dirname
+
+        #thisdirparent = directoryDetails.dirname
+        thisdirparent = i["parent"].split(directoryDetails.sharedBy+'/')
+        thisdirparent= newDirectoryName+thisdirparent[1]
         thisdirname = i["dirname"].split(directoryDetails.sharedBy+'/')
         thisdirnameval= newDirectoryName+thisdirname[1]
+        print("====gj===================")
+        print(i)
+        print(thisdirparent)
+        print(thisdirnameval)
+        print(i["parent"])
+        print("====gj===================")
         #print(thisdirnameval)
-        dirNewDetails = Directory(parent=thisdirparent, dirname=thisdirnameval, size=0, owner=directoryDetails.owner, isShared=0, sharedBy=directoryDetails.sharedBy)
-        r=addNewDirectory(dirNewDetails)
+        dirNewDetails = Directory(parent=thisdirparent, dirname=thisdirnameval, size=0, owner=directoryDetails.owner, isShared=1, sharedBy=directoryDetails.sharedBy)
+        rvalue = addNewDirectory(dirNewDetails)
 
     for j in blobList["fileList"]:
-        #print(i)
-        thisdirparent = directoryDetails.dirname
-        thisdirname = j["dirname"].split(directoryDetails.sharedBy+'/')
-        thisdirnameval= newDirectoryName+thisdirname[1]
 
-        fileData = File(parent=flieDetails.parent, filename=thisFileNameval ,type=flieDetails.type, size=flieDetails.size, time=flieDetails.time ,owner=flieDetails.owner, isShared=0, sharedBy=flieDetails.sharedBy)
+        thisdirparent = j["parent"].split(directoryDetails.sharedBy+'/')
+        thisdirparent= newDirectoryName+thisdirparent[1]
+        thisdirname = j["filename"].split(directoryDetails.sharedBy+'/')
+        thisdirnameval= newDirectoryName+thisdirname[1]
+        fileData = File(parent=thisdirparent, filename=j["filename"] ,type=j["type"], size=j["size"], time=j["time"] ,owner=directoryDetails.owner, isShared=1, sharedBy=directoryDetails.sharedBy)
         rvalue = copyFile(fileData)
 
     return rvalue
@@ -225,39 +289,60 @@ def shareFile(flieDetails):
             createDefaultDirectory(userdata)
 
         newDirectoryName = str(flieDetails.owner)+'/'+ 'Shared/'
-        directoryNewDetails = Directory(parent=flieDetails.owner+'/', dirname=newDirectoryName, size=0, owner=flieDetails.owner, isShared=0, sharedBy='')
+        directoryNewDetails = Directory(parent=flieDetails.owner+'/', dirname=newDirectoryName, size=0, owner=flieDetails.owner, isShared=1, sharedBy='')
         rvalue=addNewDirectory(directoryNewDetails)
+        #print(flieDetails.parent.split('/'))
+        filedir=flieDetails.parent.split('/')
+        filedirlen = len(filedir)
+        creatednewdir = newDirectoryName
+        #print(filedir[filedirlen-2])
+        createddirdetails = directoryNewDetails
+
+        a=2
+        while a < filedirlen-1:
+            createddirdetails.sharedBy = flieDetails.sharedBy
+            createddirdetails.isShared = 1
+            createddirdetails.parent = creatednewdir
+            creatednewdir = creatednewdir+filedir[a]+"/"
+            createddirdetails.dirname = creatednewdir
+            rvalue=addNewDirectory(createddirdetails)
+            """entity_key = datastore_client.key("Directory", creatednewdir)
+            entity = datastore.Entity(key=entity_key)
+            entity.update(createddirdetails.__dict__)
+            datastore_client.put(entity)"""
+            a += 1
+        #for i in filedir:
+            #print(i)
+        #print(flieDetails.parent)
+
+
 
         #thisFileParent = flieDetails.parent.split(newDirectoryName)
         #thisdirnameval= flieDetails.sharedBy+'/'+thisFileParent[1]
 
         thisFileName = flieDetails.filename.split(newDirectoryName)
         thisFileNameval= flieDetails.sharedBy+'/'+thisFileName[1]
-
-        fileData = File(parent=flieDetails.parent, filename=thisFileNameval ,type=flieDetails.type, size=flieDetails.size, time=flieDetails.time ,owner=flieDetails.owner, isShared=0, sharedBy=flieDetails.sharedBy)
+        fileData = File(parent=flieDetails.parent, filename=thisFileNameval ,type=flieDetails.type, size=flieDetails.size, time=flieDetails.time ,owner=flieDetails.owner, isShared=1, sharedBy=flieDetails.sharedBy)
         rvalue = copyFile(fileData)
-        print("kkkk")
+        #print("kkkk")
     except ValueError as exc:
         print(exc)
     return '0'
 
 def copyFile(fileDetails):
+
+
     storage_client = storage.Client(project=local_constants.PROJECT_NAME)
     source_bucket = storage_client.bucket(local_constants.PROJECT_STORAGE_BUCKET)
     source_blob = source_bucket.blob(fileDetails.filename)
-    print(fileDetails.filename)
-    print(source_blob)
-    print(fileDetails.parent)
     thisFileName = fileDetails.filename.split(fileDetails.sharedBy)
     thisFileNameval= fileDetails.owner+'/Shared'+thisFileName[1]
     fileDetails.filename =thisFileNameval
     destination_bucket = storage_client.bucket(local_constants.PROJECT_STORAGE_BUCKET)
     blob_copy = source_bucket.copy_blob(source_blob, destination_bucket, thisFileNameval)
-    print(destination_bucket)
-    print("-----------opo")
-    print(blob_copy)
 
-    entity_key = datastore_client.key("file", fileDetails.filename)
+
+    entity_key = datastore_client.key("file", thisFileNameval)
     entity = datastore.Entity(key=entity_key)
     entity.update(fileDetails.__dict__)
     datastore_client.put(entity)
@@ -461,7 +546,7 @@ def shareDir():
             userId = formData.get("userEmailId")
             hiddendir = formData.get("hiddendir")
             isDirectory = formData.get("isDirectory")
-            print(isDirectory)
+            #print(isDirectory)
             if isDirectory == '1':
                 shareddirectory = currentDirectoryName.split(user_data["email"])
                 newShareDirectory = userId+ '/Shared'+shareddirectory[1]
@@ -481,7 +566,7 @@ def shareDir():
                 changedDirectory = hiddendir.split(user_data["email"])
                 newchangedDirectory = userId+ '/Shared'+changedDirectory[1]
 
-                fileDetails = File(parent=newShareDirectory, filename=newchangedDirectory,type=None, size=0, time=None,owner=userId, isShared=0, sharedBy=user_data["email"])
+                fileDetails = File(parent=newShareDirectory, filename=newchangedDirectory,type=None, size=0, time=None,owner=userId, isShared=1, sharedBy=user_data["email"])
                 returnvalue = shareFile(fileDetails)
                 error_message=''
                 if returnvalue != 0:
