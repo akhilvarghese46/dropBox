@@ -708,6 +708,26 @@ def moveDirectoryto():
             error_message = "Page not loaded! User Data is missing"
             return render_template("index.html", user_data=user_data, error_message=error_message)
 
+@app.route("/goUpDirect", methods=["GET", "POST"])
+def goUpDirect():
+    user_data =checkUserData();
+    if user_data != None:
+        try:
+            currentDirectoryPath = request.args.get('currentDirectoryPath')
+            currentDirectoryPathary = currentDirectoryPath.split("/")
+            backcurrentDirectoryPath = currentDirectoryPath.replace(currentDirectoryPathary[len(currentDirectoryPathary)-2],"*/*")
+            newcurrentDirectoryName = backcurrentDirectoryPath.split("*/*/")[0]
+
+            blobDetails = File(parent=newcurrentDirectoryName, filename=newcurrentDirectoryName,type=None, size=0, time=None,owner=user_data["email"], isShared=0, sharedBy='')
+            blobList = getBlobList(blobDetails)
+            return render_template("main.html",error_message="", user_data=user_data, directoryList=blobList["directoryList"], fileList=blobList["fileList"], currentDirectoryPath = newcurrentDirectoryName)
+        except ValueError as exc:
+            error_message = str(exc)
+            return render_template("error.html", error_message=error_message)
+    else:
+        error_message = "Page not loaded! User Data is missing"
+        return render_template("index.html", user_data=user_data, error_message=error_message)
+
 
 
 @app.route("/singnout", methods=["GET", "POST"])
