@@ -269,7 +269,7 @@ def shareDirectory(directoryDetails):
         thisdirname = j["filename"].split(directoryDetails.sharedBy+'/')
         thisdirnameval= newDirectoryName+thisdirname[1]
         fileData = File(parent=thisdirparent, filename=j["filename"] ,type=j["type"], size=j["size"], time=j["time"] ,owner=directoryDetails.owner, isShared=1, sharedBy=directoryDetails.sharedBy)
-        rvalue = copyFile(fileData)
+        rvalue = copyFile(fileData,'0')
 
     return rvalue
 
@@ -293,30 +293,34 @@ def shareFile(flieDetails):
         #print(filedir[filedirlen-2])
         createddirdetails = directoryNewDetails
 
-        a=2
+        """a=2
         while a < filedirlen-1:
             createddirdetails.sharedBy = flieDetails.sharedBy
             createddirdetails.isShared = 1
             createddirdetails.parent = creatednewdir
             creatednewdir = creatednewdir+filedir[a]+"/"
             createddirdetails.dirname = creatednewdir
-            rvalue=addNewDirectory(createddirdetails)
+            rvalue=addNewDirectory(createddirdetails)"""
 
         thisFileName = flieDetails.filename.split(newDirectoryName)
         thisFileNameval= flieDetails.sharedBy+'/'+thisFileName[1]
         fileData = File(parent=flieDetails.parent, filename=thisFileNameval ,type=flieDetails.type, size=flieDetails.size, time=flieDetails.time ,owner=flieDetails.owner, isShared=1, sharedBy=flieDetails.sharedBy)
-        rvalue = copyFile(fileData)
+        rvalue = copyFile(fileData,'1')
 
     except ValueError as exc:
         print(exc)
     return '0'
 
-def copyFile(fileDetails):
+def copyFile(fileDetails,isshare):
     storage_client = storage.Client(project=local_constants.PROJECT_NAME)
     source_bucket = storage_client.bucket(local_constants.PROJECT_STORAGE_BUCKET)
     source_blob = source_bucket.blob(fileDetails.filename)
-    thisFileName = fileDetails.filename.split(fileDetails.sharedBy)
-    thisFileNameval= fileDetails.owner+'/Shared'+thisFileName[1]
+    if isshare == '1':
+        thisFileName = fileDetails.filename.split('/')
+        thisFileNameval= fileDetails.owner+'/Shared/'+thisFileName[len(thisFileName)-1]
+    else:
+        thisFileName = fileDetails.filename.split(fileDetails.sharedBy)
+        thisFileNameval= fileDetails.owner+'/Shared'+thisFileName[1]
     fileDetails.filename =thisFileNameval
     destination_bucket = storage_client.bucket(local_constants.PROJECT_STORAGE_BUCKET)
     blob_copy = source_bucket.copy_blob(source_blob, destination_bucket, thisFileNameval)
@@ -487,14 +491,16 @@ def createNewFolder():
 def deletDirectory():
     user_data =checkUserData();
     if user_data != None:
-        currentDirectoryName = request.args.get('dirName')
-        directoryDetails = Directory(parent=currentDirectoryName, dirname=currentDirectoryName, size=0,owner=user_data["email"], isShared=0, sharedBy='')
+        delDirectory = request.args.get('dirName')
+        currentDirectoryName =  request.args.get('currentDirectoryPath')
+        directoryDetails = Directory(parent=delDirectory, dirname=delDirectory, size=0,owner=user_data["email"], isShared=0, sharedBy='')
         returnValue = deleteDirectory(directoryDetails)
+        error_message=""
         if returnValue != 1:
             error_message = "This directory already has some folders or files. So user can't delete this folder"
-            blobDetails = File(parent=currentDirectoryName, filename=currentDirectoryName,type=None, size=0, time=None,owner=user_data["email"], isShared=0, sharedBy='')
-            blobList = getBlobList(blobDetails)
-            return render_template("main.html",error_message=error_message, user_data=user_data, directoryList=blobList["directoryList"], fileList=blobList["fileList"], currentDirectoryPath = currentDirectoryName)
+        blobDetails = File(parent=currentDirectoryName, filename=currentDirectoryName,type=None, size=0, time=None,owner=user_data["email"], isShared=0, sharedBy='')
+        blobList = getBlobList(blobDetails)
+        return render_template("main.html",error_message=error_message, user_data=user_data, directoryList=blobList["directoryList"], fileList=blobList["fileList"], currentDirectoryPath = currentDirectoryName)
             #return render_template("error.html", error_message=error_message, return_url='/,\',currentDirectoryPath=currentDirectoryName,user_data=user_data)
         return redirect('/')
     else:
@@ -505,10 +511,13 @@ def deletDirectory():
 def deletFiles():
     user_data =checkUserData();
     if user_data != None:
-        currentDirectoryName = request.args.get('fileName')
-        fileDetails =File(parent=currentDirectoryName, filename=currentDirectoryName,type=None, size=0, time=None,owner=user_data["email"], isShared=0, sharedBy='')
+        deleteFilename = request.args.get('fileName')
+        currentDirectoryName =  request.args.get('currentDirectoryPath')
+        fileDetails =File(parent=deleteFilename, filename=deleteFilename,type=None, size=0, time=None,owner=user_data["email"], isShared=0, sharedBy='')
         deleteFile(fileDetails)
-        return redirect('/')
+        blobDetails = File(parent=currentDirectoryName, filename=currentDirectoryName,type=None, size=0, time=None,owner=user_data["email"], isShared=0, sharedBy='')
+        blobList = getBlobList(blobDetails)
+        return render_template("main.html",error_message="", user_data=user_data, directoryList=blobList["directoryList"], fileList=blobList["fileList"], currentDirectoryPath = currentDirectoryName)
     else:
         error_message = "Page not loaded! User Data is missing"
         return render_template("index.html", user_data=user_data, error_message=error_message)
@@ -586,6 +595,11 @@ def overwriteFile():
     if user_data != None:
         try:
             fileDataDetails = request.args.get('hiddenFileData')
+            print(fileDataDetails)
+            fileDataDetailsNew = fileDataDetails.replace("'", "\"")
+            fileDataDetailsNew=json.loads(fileDataDetailsNew)
+            print(fileDataDetailsNew)
+            print("========================")
             #fileDataDetails = fileDataDetails.replace("'", "\"")
             #fileDataDetails=json.loads(fileDataDetails)
             #print(fileDataDetails.fileData)
@@ -593,7 +607,7 @@ def overwriteFile():
             #if newDirectoryName[len(newDirectoryName) - 1] != '/':
             #newDirectoryName = currentDirectoryName + newDirectoryName + '/'
 
-            fileDetails = File(parent=fileDataDetails.currentDirectoryName, filename=fileDataDetails.filedata ,type=None, size=0, time=None, owner=user_data["email"], isShared=0, sharedBy='')
+            fileDetails = File(parent=fileDataDetails["currentDirectoryName"], filename=fileDataDetails["filedata"] ,type=None, size=0, time=None, owner=user_data["email"], isShared=0, sharedBy='')
             returnvalue = overwriteUploadFile(fileDetails)
             """hiddenFileData = {}
             error_message=''
@@ -607,8 +621,10 @@ def overwriteFile():
             blobList = getBlobList(blobDetails)
             return render_template("main.html",error_message=error_message, user_data=user_data, directoryList=blobList["directoryList"], fileList=blobList["fileList"], currentDirectoryPath = currentDirectoryName, overwrite=overwrite ,hiddenFileData=hiddenFileData)
                 """
-            error_message = "Page not loaded! User Data is missing"
-            return render_template("index.html", user_data=user_data, error_message=error_message)
+            blobDetails = File(parent=currentDirectoryName, filename=currentDirectoryName,type=None, size=0, time=None)
+            blobList = getBlobList(blobDetails)
+            return render_template("main.html",error_message=error_message, user_data=user_data, directoryList=blobList["directoryList"], fileList=blobList["fileList"], currentDirectoryPath = currentDirectoryName)
+
         except ValueError as exc:
             error_message = str(exc)
             return render_template("error.html", error_message=error_message)
@@ -651,11 +667,12 @@ def shareDir():
                 newchangedDirectory = userId+ '/Shared'+changedDirectory[1]
 
                 fileDetails = File(parent=newShareDirectory, filename=newchangedDirectory,type=None, size=0, time=None,owner=userId, isShared=1, sharedBy=user_data["email"])
+
                 returnvalue = shareFile(fileDetails)
                 error_message=''
                 if returnvalue != 0:
                     returnDirectoryName = currentDirectoryName
-                    error_message = "This File is already shared."
+                    error_message = "This File is successfully shared."
                 else:
                     returnDirectoryName = currentDirectoryName
             blobDetails = File(parent=currentDirectoryName, filename=currentDirectoryName,type=None, size=0, time=None,owner=user_data["email"], isShared=0, sharedBy='')

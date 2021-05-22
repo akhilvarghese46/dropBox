@@ -186,7 +186,7 @@
       <br>
       <div style="margin-left: 6%;">
         {% if(currentDirectoryPath.replace(user_data.email, "UserRootFolder")) != "UserRootFolder/"%}
-        <h2><img src="/static/back.png" alt="file" width="30px" height="30px"><a href=" /goUpDirect?currentDirectoryPath={{currentDirectoryPath}}">../</a></h2>
+        <h2><a href=" /goUpDirect?currentDirectoryPath={{currentDirectoryPath}}"><img src="/static/back.png" alt="file" width="30px" height="30px"> ../</a></h2>
         {%endif%}
       </div>
       <table class="uTbId" style="width:90%;">
@@ -219,7 +219,7 @@
           <td style="text-align: center;"></td>
           <td style="text-align: center;">{% if dir.isShared == 0 %}<a href="/moveDir?dirName={{dir.name}}&&isDir=1&&currentDirectoryPath={{currentDirectoryPath}}"><img src="/static/move.png" alt="move" width="29px" height="30px"></a>{%endif%}</td>
           <td style="text-align: center;"></td>
-          <td style="text-align: center;">{% if dir.isShared == 0 %}<a href="/deletDir?dirName={{dir.name}}"><img src="/static/delete.png" alt="delete" width="29px" height="30px"></a>{%endif%}</td>
+          <td style="text-align: center;">{% if dir.isShared == 0 %}<a href="/deletDir?dirName={{dir.name}}&&currentDirectoryPath={{currentDirectoryPath}}"><img src="/static/delete.png" alt="delete" width="29px" height="30px"></a>{%endif%}</td>
         </tr>
         {% endfor %}
         {%endif%}
@@ -243,7 +243,7 @@
           <td style="text-align: center;">{% if file.isShared == 0 %}<a href="/downloadFileDetails?fileName={{file.name}}"><img src="/static/download.png" alt="download" width="78px" height="62px"></a>{%endif%}</td>
           <td style="text-align: center;">{% if file.isShared == 0 %}<a href="/moveDir?dirName={{file.name}}&&isDir=2&&currentDirectoryPath={{currentDirectoryPath}}"><img src="/static/move.png" alt="move" width="29px" height="30px"></a>{%endif%}</td>
           <td style="text-align: center;"><a href="/CheckDuplicateFile?currentDirectoryPath={{currentDirectoryPath}}&&mainUrl={{file.name}}"><img src="/static/click.png" alt="click" width="29px" height="30px"></a></td>
-          <td style="text-align: center;">{% if file.isShared == 0 %}<a href="/deletFile?fileName={{file.name}}"><img src="/static/delete.png" alt="delete" width="29px" height="30px"></a>{%endif%}</td>
+          <td style="text-align: center;">{% if file.isShared == 0 %}<a href="/deletFile?fileName={{file.name}}&&currentDirectoryPath={{currentDirectoryPath}}"><img src="/static/delete.png" alt="delete" width="29px" height="30px"></a>{%endif%}</td>
         </tr>
         {% endfor %}
         {%endif%}
