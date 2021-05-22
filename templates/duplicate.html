@@ -1,0 +1,121 @@
+{% extends 'main.html' %}
+
+
+{% block content %}
+
+<head>
+  <style>
+    .tablediv {
+      border: 1px solid black;
+    }
+  </style>
+</head>
+<div id="duplicate" class="duplicateMsg">
+  <div class="msg-content" style="background-color: #7fb2e7;">
+
+    <form method="post" action="openDirectory?dirName={{currentDirectoryPath}}">
+      <div class="datadiv" style="width:92%;">
+        {% if isFile == '1'%}
+        <h3>Duplicate Files in current Directory</h3>
+        {% else: %}
+        <h3>Duplicate Files</h3>
+        {%endif%}
+        <table border="1" style="border-collapse:collapse;table-layout: fixed; word-wrap: break-word;">
+          <tr>
+            <th>
+              Directory Files
+            </th>
+            <th>
+              Matching Files
+            </th>
+          </tr>
+          {% if bloDataList|length == 0 %}
+          <tr>
+            <td colspan="2" style="text-align: center;">------ No Duplicate File Found ------</td>
+          </tr>
+          {% else: %}
+          {% if isFile == '1'%}
+
+
+
+          {% for mainfile in bloDataList %}
+          {% if mainfile["fileName"] == mainUrl%}
+          <tr>
+            <td>
+              {{mainfile["fileName"].replace(user_data.email+"/", " ")}}
+            </td>
+            <td>
+              <table>
+                {% for matchfile in bloDataList %}
+                {% if mainfile["hashValue"] == matchfile["hashValue"] and mainfile["fileName"] != matchfile["fileName"] and  matchfile["fileName"].replace(user_data.email+"/", " ").split("/")|length == mainUrl.replace(user_data.email+"/", " ").split("/")|length %}
+                <tr>
+                  <td>
+                    >>. {{matchfile["fileName"].replace(user_data.email+"/", " ")}}
+                  </td>
+                </tr>
+                {%endif%}
+                {% endfor %}
+
+              </table>
+
+            </td>
+          </tr>
+          {%endif%}
+
+          {% endfor %}
+
+
+
+          {% else: %}
+          {% for mainfile in bloDataList %}
+
+          <tr>
+            <td>
+              {{mainfile["fileName"].replace(user_data.email+"/", " ")}}
+            </td>
+            <td>
+              <table>
+                {% for matchfile in bloDataList %}
+                {% if mainfile["hashValue"] == matchfile["hashValue"] and mainfile["fileName"] != matchfile["fileName"] %}
+                <tr>
+                  <td>
+                    >>. {{matchfile["fileName"].replace(user_data.email+"/", " ")}}
+                  </td>
+                </tr>
+                {%endif%}
+                {% endfor %}
+
+              </table>
+
+            </td>
+          </tr>
+
+          {% endfor %}
+          {%endif%}
+          {%endif%}
+        </table>
+
+        <button class="btncreate btn" style="width: 6%;background: ##2e85ef;margin-left: 69%;">Ok</button>
+
+      </div>
+    </form>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block js %}
+<script>
+  var duplicate = document.getElementById("duplicate");
+  var dupclose = document.getElementsByClassName("dupclose")[0];
+  duplicate.style.display = "block";
+  dupclose.onclick = function() {
+    duplicate.style.display = "none";
+  }
+  window.onclick = function(event) {
+    if (event.target == duplicate) {
+      duplicate.style.display = "none";
+    }
+  }
+</script>
+{% endblock %}

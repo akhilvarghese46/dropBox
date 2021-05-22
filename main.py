@@ -411,7 +411,23 @@ def moveFileNewLoc(flieDetails):
         print(exc)
     return '1'
 
-
+def findDuplicateFile(fileDetails,prefix):
+    try:
+        #getAllDirList(fileDetails)
+        blobData=[]
+        storage_client = storage.Client(project=local_constants.PROJECT_NAME)
+        bucket = storage_client.bucket(local_constants.PROJECT_STORAGE_BUCKET)
+        bloblist = storage_client.list_blobs(local_constants.PROJECT_STORAGE_BUCKET, prefix=fileDetails.parent)
+        for i in bloblist:
+            if i.name[len(i.name) - 1] != '/':
+                fileData={}
+                blob = bucket.get_blob(i.name)
+                fileData["fileName"] = i.name
+                fileData["hashValue"] = blob.crc32c
+                blobData.append(fileData)
+    except ValueError as exc:
+        print(exc)
+    return blobData
 #root function is a default function
 @app.route('/')
 def root():
@@ -728,6 +744,27 @@ def goUpDirect():
         error_message = "Page not loaded! User Data is missing"
         return render_template("index.html", user_data=user_data, error_message=error_message)
 
+@app.route("/CheckDuplicateFile", methods=["GET", "POST"])
+def CheckDuplicateFile():
+    user_data =checkUserData();
+    if user_data != None:
+        try:
+            currentDirectoryPath = request.args.get('currentDirectoryPath')
+            mainUrl = request.args.get('mainUrl')
+            if(mainUrl=='1'):
+                isFile = '0'
+                blobDetails = File(parent=user_data["email"]+"/", filename=user_data["email"]+"/",type=None, size=0, time=None,owner=user_data["email"], isShared=0, sharedBy='')
+            else:
+                isFile = '1'
+                blobDetails = File(parent=currentDirectoryPath, filename=mainUrl,type=None, size=0, time=None,owner=user_data["email"], isShared=0, sharedBy='')
+            duplicateFilesData = findDuplicateFile(blobDetails,None)
+            return render_template("duplicate.html",error_message="",mainUrl=mainUrl, isFile = isFile, user_data=user_data, bloDataList =duplicateFilesData,currentDirectoryPath=currentDirectoryPath)
+        except ValueError as exc:
+            error_message = str(exc)
+            return render_template("error.html", error_message=error_message)
+    else:
+        error_message = "Page not loaded! User Data is missing"
+        return render_template("index.html", user_data=user_data, error_message=error_message)
 
 
 @app.route("/singnout", methods=["GET", "POST"])

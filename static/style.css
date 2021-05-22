@@ -12,9 +12,9 @@ body {
   font-size: 1em;
   font-weight: 600;
   color: #ffffff;
-  background-color: #a7a7a7;
+  background-color: #7fb2e7;
   width: 106%;
-  border: #a7a7a7;
+  border: #7fb2e7;
   border-radius: 7px;
   opacity: .9;
 }
@@ -33,7 +33,7 @@ h3 {
   /* color: #f80707; */
   /* background-color: #68e3e3; */
   width: 97%;
-  border: 15px solid #a7a7a7;
+  border: 15px solid #7fb2e7;
   border-radius: 7px;
 }
 
@@ -82,7 +82,7 @@ h3 {
 }
 
 /* error message div */
-.errorMsgdiv {
+.errorMsgdiv, .duplicateMsg {
   display: none;
   position: fixed;
   z-index: 1;
@@ -107,7 +107,7 @@ h3 {
   font-weight: 900;
 }
 
-.close, .close2, .close3, .close4 {
+.close, .close2, .close3, .close4, .dupclose {
   color: #aaaaaa;
   float: right;
   font-size: 28px;
@@ -117,7 +117,8 @@ h3 {
 .close2:hover,
 .close2:focus, .close3:hover,
 .close3:focus, .close4:hover,
-.close4:focus, {
+.close4:focus, .dupclose:hover,
+.dupclose:focus {
   color: #000;
   text-decoration: none;
   cursor: pointer;
@@ -175,7 +176,7 @@ select {
 }
 
 th {
-  background-color: #dddddd;
+  background-color: #7fb2e7;
   color: #1e1691;
 }
 
