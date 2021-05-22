@@ -215,7 +215,12 @@
           <td><a href=" /openDirectory?dirName={{dir.name}}">{{dir.name.replace(currentDirectoryPath, "").replace('/', "")}}</a></td>
           <td style="text-align: center;">{% if dir.isShared == 0 %}{%if dir.owner.split("@")|length == 2%}{{dir.owner.split("@")[0]}}{% else: %} {{dir.owner}}{%endif%} {% else: %}{%endif%}</td>
           <td style="text-align: center;">{% if dir.isShared == 0 %} {% else: %}{%if dir.sharedBy.split("@")|length == 2%}{{dir.sharedBy.split("@")[0]}}{% else: %} {{dir.sharedBy}}{%endif%}{%endif%}</td>
-          <td style="text-align: center;">{% if dir.isShared == 0 %}<a id="d1share_{{dir.name}}" class="sharedir" href="#" value="{{dir.name}}"><img src="/static/share.png" alt="share" width="29px" height="30px"></a>{%endif%}</td>
+          <td style="text-align: center;">
+            {% if dir.isShared == 0 %}
+            <!-- <a id="d1share_{{dir.name}}" class="sharedir" href="#" value="{{dir.name}}"><img src="/static/share.png" alt="share" width="29px" height="30px">
+              </a>-->
+            {%endif%}
+          </td>
           <td style="text-align: center;"></td>
           <td style="text-align: center;">{% if dir.isShared == 0 %}<a href="/moveDir?dirName={{dir.name}}&&isDir=1&&currentDirectoryPath={{currentDirectoryPath}}"><img src="/static/move.png" alt="move" width="29px" height="30px"></a>{%endif%}</td>
           <td style="text-align: center;"></td>

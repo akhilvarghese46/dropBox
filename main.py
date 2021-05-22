@@ -317,11 +317,13 @@ def copyFile(fileDetails,isshare):
     source_blob = source_bucket.blob(fileDetails.filename)
     if isshare == '1':
         thisFileName = fileDetails.filename.split('/')
-        thisFileNameval= fileDetails.owner+'/Shared/'+thisFileName[len(thisFileName)-1]
+        thisFileNameval = fileDetails.owner+'/Shared/'+thisFileName[len(thisFileName)-1]
+        thisFileParent = fileDetails.owner+'/Shared/'
+        fileDetails.parent = thisFileParent
     else:
         thisFileName = fileDetails.filename.split(fileDetails.sharedBy)
-        thisFileNameval= fileDetails.owner+'/Shared'+thisFileName[1]
-    fileDetails.filename =thisFileNameval
+        thisFileNameval = fileDetails.owner+'/Shared'+thisFileName[1]
+    fileDetails.filename = thisFileNameval
     destination_bucket = storage_client.bucket(local_constants.PROJECT_STORAGE_BUCKET)
     blob_copy = source_bucket.copy_blob(source_blob, destination_bucket, thisFileNameval)
 
