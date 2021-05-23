@@ -70,6 +70,9 @@ def addNewFile(file):
             blobNewList.append(i)
     if(len(blobNewList) == 0):
         blob.upload_from_file(file.filename)
+    else:
+        blobTwo = bucket.blob("overwritefolder/" + file.filename.filename)
+        blobTwo.upload_from_file(file.filename)
 
     newFilename = file.parent + file.filename.filename
     file.filename = newFilename
@@ -213,6 +216,12 @@ def downloadFile(fileDetails):
 
 def overwriteUploadFile(file):
     storage_client = storage.Client(project=local_constants.PROJECT_NAME)
+    source_bucket = storage_client.bucket(local_constants.PROJECT_STORAGE_BUCKET)
+    source_blob = source_bucket.blob("overwritefolder/"+file.filename)
+    destination_bucket = storage_client.bucket(local_constants.PROJECT_STORAGE_BUCKET)
+    blob_copy = source_bucket.copy_blob(source_blob, destination_bucket, file.parent+file.filename)
+    source_blob.delete()
+    """storage_client = storage.CClient(project=local_constants.PROJECT_NAME)
     bucket = storage_client.bucket(local_constants.PROJECT_STORAGE_BUCKET)
     blob = bucket.blob(file.parent + file.filename.filename)
     blobList = storage_client.list_blobs(local_constants.PROJECT_STORAGE_BUCKET, prefix=file.parent)
@@ -222,8 +231,8 @@ def overwriteUploadFile(file):
             blobNewList.append(i)
 
     #if(len(blobNewList) == 0):
-        #blob.upload_from_file(file.filename)
-    return len(blobNewList)
+        #blob.upload_from_file(file.filename)"""
+
 
 def shareDirectory(directoryDetails):
     userdata={}
@@ -553,7 +562,7 @@ def uploadNewFile():
         try:
             formData = dict(request.form)
             currentDirectoryName = formData.get("currentFileDirectoryPath")
-            uploadFileName = formData.get("filename")
+            #uploadFileName = formData.get("filename")
             fileData = request.files['filename']
             #if newDirectoryName[len(newDirectoryName) - 1] != '/':
             #newDirectoryName = currentDirectoryName + newDirectoryName + '/'
@@ -564,21 +573,18 @@ def uploadNewFile():
             error_message=''
             overwrite = 0
             if returnvalue != 0:
-                hiddenFileData["fileData"] = fileData
-                hiddenFileData["fileName"] = uploadFileName
-                hiddenFileData["currentDirectoryName"]=currentDirectoryName
                 error_message = "This file is already exist. Do you want to overwrite?"
                 overwrite = 1
             blobDetails = File(parent=currentDirectoryName, filename=currentDirectoryName,type=None, size=0, time=None,owner=user_data["email"], isShared=0, sharedBy='')
             blobList = getBlobList(blobDetails)
-            return render_template("main.html",error_message=error_message, user_data=user_data, directoryList=blobList["directoryList"], fileList=blobList["fileList"], currentDirectoryPath = currentDirectoryName, overwrite=overwrite ,hiddenFileData=hiddenFileData)
+            return render_template("main.html",error_message=error_message, user_data=user_data, directoryList=blobList["directoryList"], fileList=blobList["fileList"], currentDirectoryPath = currentDirectoryName, overwrite=overwrite ,overwritefileName = fileData.filename)
         except ValueError as exc:
             error_message = str(exc)
             return render_template("error.html", error_message=error_message)
     else:
         error_message = "Page not loaded! User Data is missing"
         return render_template("index.html", user_data=user_data, error_message=error_message)
-
+"""
 @app.route("/downloadFileDetails", methods=["GET", "POST"])
 def downloadFileDetails():
     user_data =checkUserData();
@@ -590,44 +596,36 @@ def downloadFileDetails():
     else:
         error_message = "Page not loaded! User Data is missing"
         return render_template("index.html", user_data=user_data, error_message=error_message)
+"""
+@app.route("/downloadFileDetails/<string:filename>", methods=["GET", "POST"])
+def downloadFileDetails(filename):
+    user_data =checkUserData();
+    if user_data != None:
+        #currentFileName = request.args.get('fileName')
+        filename=filename.replace("_aekshhiiltha1025_", "/")
+        fileDetails =File(parent=filename, filename=filename,type=None, size=0, time=None,owner=user_data["email"], isShared=0, sharedBy='')
+        rval = downloadFile(fileDetails)
+        return Response(rval,mimetype='application/octet-stream')
+    else:
+        error_message = "Page not loaded! User Data is missing"
+        return render_template("index.html", user_data=user_data, error_message=error_message)
+
 
 @app.route("/overwriteFile", methods=["GET", "POST"])
 def overwriteFile():
     user_data =checkUserData();
     if user_data != None:
         try:
-            fileDataDetails = request.args.get('hiddenFileData')
-            print(fileDataDetails)
-            fileDataDetailsNew = fileDataDetails.replace("'", "\"")
-            fileDataDetailsNew=json.loads(fileDataDetailsNew)
-            print(fileDataDetailsNew)
-            print("========================")
-            #fileDataDetails = fileDataDetails.replace("'", "\"")
-            #fileDataDetails=json.loads(fileDataDetails)
-            #print(fileDataDetails.fileData)
-            #print('oooooooooooooooooooooooooooooooooooo')
-            #if newDirectoryName[len(newDirectoryName) - 1] != '/':
-            #newDirectoryName = currentDirectoryName + newDirectoryName + '/'
-
-            fileDetails = File(parent=fileDataDetails["currentDirectoryName"], filename=fileDataDetails["filedata"] ,type=None, size=0, time=None, owner=user_data["email"], isShared=0, sharedBy='')
-            returnvalue = overwriteUploadFile(fileDetails)
-            """hiddenFileData = {}
-            error_message=''
-            overwrite = 0
-            if returnvalue != 0:
-                hiddenFileData["fileData"] = fileData
-                hiddenFileData["fileName"] = uploadFileName = formData.get("filename")
-                error_message = "This file is already exist. Do you want to overwrite?"
-                overwrite = 1
-            blobDetails = File(parent=currentDirectoryName, filename=currentDirectoryName,type=None, size=0, time=None)
+            fileDataDetails = request.args.get('overwritefileName')
+            currentDirectoryPath = request.args.get('currentDirectoryPath')
+            fileDetails = File(parent=currentDirectoryPath, filename=fileDataDetails ,type=None, size=0, time=None, owner=user_data["email"], isShared=0, sharedBy='')
+            overwriteUploadFile(fileDetails)
+            blobDetails = File(parent=currentDirectoryPath, filename=currentDirectoryPath,type=None, size=0, time=None, owner=user_data["email"], isShared=0, sharedBy='')
             blobList = getBlobList(blobDetails)
-            return render_template("main.html",error_message=error_message, user_data=user_data, directoryList=blobList["directoryList"], fileList=blobList["fileList"], currentDirectoryPath = currentDirectoryName, overwrite=overwrite ,hiddenFileData=hiddenFileData)
-                """
-            blobDetails = File(parent=currentDirectoryName, filename=currentDirectoryName,type=None, size=0, time=None)
-            blobList = getBlobList(blobDetails)
-            return render_template("main.html",error_message=error_message, user_data=user_data, directoryList=blobList["directoryList"], fileList=blobList["fileList"], currentDirectoryPath = currentDirectoryName)
+            return render_template("main.html",error_message="", user_data=user_data, directoryList=blobList["directoryList"], fileList=blobList["fileList"], currentDirectoryPath = currentDirectoryPath)
 
         except ValueError as exc:
+            print(exc)
             error_message = str(exc)
             return render_template("error.html", error_message=error_message)
     else:
