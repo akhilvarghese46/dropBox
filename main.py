@@ -21,10 +21,8 @@ def createUserInfo(user_data):
     datastore_client.put(entity)
 
 def retrieveUserInfo(user_data):
-    #print("aaa")
     entity_key = datastore_client.key('UserDetails', user_data['email'])
     entity = datastore_client.get(entity_key)
-    #print(entity)
     return entity
 
 def checkUserData():
@@ -108,25 +106,14 @@ def getBlobList(prefix):
     returnValue = {}
     try:
         for i in blobList:
-
-
             if i.name != prefix.filename:
-
                  dirData = (i.name.split(''+prefix.parent))[1].split('/')
-
                  if(len(dirData)==2 and dirData[1]==''):
-
                      for j in dirqrlist:
-
                          if(i.name==j["dirname"]):
                               j["name"] = i.name
                               directory_list.append(j)
-                     """dirrectryqry = datastore_client.query(kind="Directory")
-                     dirrectryqry = dirrectryqry.add_filter('owner', '=', prefix.owner)
-                     dirrectryqry = dirrectryqry.add_filter('dirname', '=', i.name).fetch()
-                     for j in dirrectryqry:
-                         j["name"] = i.name
-                         directory_list.append(j)"""
+
                  if(len(dirData)==1):
                      for l in fileqrlist:
                          if(i.name==l["filename"]):
@@ -159,7 +146,6 @@ def getAllDirList(prefix):
     returnValue = {}
     try:
         for i in blobList:
-
             if i.name != prefix.filename:
                  dirData = (i.name.split(''+prefix.parent))[1].split('/')
                  if(dirData[len(dirData)-1]==''):
@@ -184,6 +170,12 @@ def createDefaultDirectory(user_data):
     bucket = storage_client.bucket(local_constants.PROJECT_STORAGE_BUCKET)
     blob = bucket.blob(user_data["email"]+'/')
     blob.upload_from_string('', content_type='application/x-www-formurlencoded; charset=UTF-8')
+
+    directory = Directory(parent=user_data["email"]+'/', dirname=user_data["email"]+'/', size=0, owner=user_data["email"], isShared=0, sharedBy='')
+    entity_key = datastore_client.key("Directory", user_data["email"]+'/')
+    entity = datastore.Entity(key=entity_key)
+    entity.update(directory.__dict__)
+    datastore_client.put(entity)
 
 def deleteDirectory(directoryDetails):
     storage_client = storage.Client(project=local_constants.PROJECT_NAME)
@@ -221,18 +213,6 @@ def overwriteUploadFile(file):
     destination_bucket = storage_client.bucket(local_constants.PROJECT_STORAGE_BUCKET)
     blob_copy = source_bucket.copy_blob(source_blob, destination_bucket, file.parent+file.filename)
     source_blob.delete()
-    """storage_client = storage.CClient(project=local_constants.PROJECT_NAME)
-    bucket = storage_client.bucket(local_constants.PROJECT_STORAGE_BUCKET)
-    blob = bucket.blob(file.parent + file.filename.filename)
-    blobList = storage_client.list_blobs(local_constants.PROJECT_STORAGE_BUCKET, prefix=file.parent)
-    blobNewList=[]
-    for i in blobList:
-        if(i.name == file.parent + file.filename.filename):
-            blobNewList.append(i)
-
-    #if(len(blobNewList) == 0):
-        #blob.upload_from_file(file.filename)"""
-
 
 def shareDirectory(directoryDetails):
     userdata={}
@@ -250,9 +230,7 @@ def shareDirectory(directoryDetails):
     originalDirectory = directoryDetails.dirname.split(directoryDetails.owner+ '/Shared')
     orginalDirectory = str(directoryDetails.sharedBy) + originalDirectory[1]
     blobNewList=[]
-    #rvalue = 1
-    #print("0---------------0")
-    #print(orginalDirectory)
+
 
     blobDetails = File(parent=orginalDirectory, filename=orginalDirectory,type=None, size=0, time=None,owner=directoryDetails.sharedBy, isShared=0, sharedBy='')
     #blobList = getBlobList(blobDetails)
@@ -417,7 +395,6 @@ def moveFileNewLoc(flieDetails):
         newmaindir =flieDetails.filename.split("/")
         newmaindirlen = len(newmaindir)-1
         newFileData = flieDetails.parent+newmaindir[newmaindirlen]
-        print(newFileData)
         fileData = File(parent=flieDetails.parent, filename=newFileData ,type=flieDetails.type, size=flieDetails.size, time=flieDetails.time ,owner=flieDetails.owner, isShared=0, sharedBy="")
         fileMoveTo(fileData, flieDetails.filename)
         deleteFile(flieDetails)
@@ -493,7 +470,7 @@ def createNewFolder():
             return render_template("main.html",error_message=error_message, user_data=user_data, directoryList=blobList["directoryList"], fileList=blobList["fileList"], currentDirectoryPath = returnDirectoryName)
         except ValueError as exc:
             error_message = str(exc)
-            return render_template("error.html", error_message=error_message)
+            return render_template("error.html", error_message=error_message,currentDirectoryPath=user_data["email"]+'/')
     else:
         error_message = "Page not loaded! User Data is missing"
         return render_template("index.html", user_data=user_data, error_message=error_message)
@@ -564,9 +541,6 @@ def uploadNewFile():
             currentDirectoryName = formData.get("currentFileDirectoryPath")
             #uploadFileName = formData.get("filename")
             fileData = request.files['filename']
-            #if newDirectoryName[len(newDirectoryName) - 1] != '/':
-            #newDirectoryName = currentDirectoryName + newDirectoryName + '/'
-
             fileDetails = File(parent=currentDirectoryName, filename=fileData ,type=None, size=0, time=None,owner=user_data["email"], isShared=0, sharedBy='')
             returnvalue = addNewFile(fileDetails)
             hiddenFileData = {}
@@ -580,23 +554,11 @@ def uploadNewFile():
             return render_template("main.html",error_message=error_message, user_data=user_data, directoryList=blobList["directoryList"], fileList=blobList["fileList"], currentDirectoryPath = currentDirectoryName, overwrite=overwrite ,overwritefileName = fileData.filename)
         except ValueError as exc:
             error_message = str(exc)
-            return render_template("error.html", error_message=error_message)
+            return render_template("error.html", error_message=error_message,currentDirectoryPath=user_data["email"]+'/')
     else:
         error_message = "Page not loaded! User Data is missing"
         return render_template("index.html", user_data=user_data, error_message=error_message)
-"""
-@app.route("/downloadFileDetails", methods=["GET", "POST"])
-def downloadFileDetails():
-    user_data =checkUserData();
-    if user_data != None:
-        currentFileName = request.args.get('fileName')
-        fileDetails =File(parent=currentFileName, filename=currentFileName,type=None, size=0, time=None,owner=user_data["email"], isShared=0, sharedBy='')
-        rval = downloadFile(fileDetails)
-        return Response(rval,mimetype='application/octet-stream')
-    else:
-        error_message = "Page not loaded! User Data is missing"
-        return render_template("index.html", user_data=user_data, error_message=error_message)
-"""
+
 @app.route("/downloadFileDetails/<string:filename>", methods=["GET", "POST"])
 def downloadFileDetails(filename):
     user_data =checkUserData();
@@ -627,7 +589,7 @@ def overwriteFile():
         except ValueError as exc:
             print(exc)
             error_message = str(exc)
-            return render_template("error.html", error_message=error_message)
+            return render_template("error.html", error_message=error_message,currentDirectoryPath=user_data["email"]+'/')
     else:
         error_message = "Page not loaded! User Data is missing"
         return render_template("index.html", user_data=user_data, error_message=error_message)
@@ -733,9 +695,7 @@ def moveDirectoryto():
                     error_message = "This File is successfully moved!"
                 else:
                     returnDirectoryName = currentDirectory
-            #blobDetails = File(parent=moveLocation, filename=moveLocation,type=None, size=0, time=None,owner=user_data["email"], isShared=0, sharedBy='')
-            #blobList = getBlobList(blobDetails)
-            #return render_template("main.html",error_message=error_message, user_data=user_data, directoryList=blobList["directoryList"], fileList=blobList["fileList"], currentDirectoryPath = moveLocation)
+
             return redirect('/')
         except ValueError as exc:
             error_message = "Page not loaded! User Data is missing"
@@ -756,7 +716,7 @@ def goUpDirect():
             return render_template("main.html",error_message="", user_data=user_data, directoryList=blobList["directoryList"], fileList=blobList["fileList"], currentDirectoryPath = newcurrentDirectoryName)
         except ValueError as exc:
             error_message = str(exc)
-            return render_template("error.html", error_message=error_message)
+            return render_template("error.html", error_message=error_message,currentDirectoryPath=user_data["email"]+'/')
     else:
         error_message = "Page not loaded! User Data is missing"
         return render_template("index.html", user_data=user_data, error_message=error_message)
@@ -778,7 +738,7 @@ def CheckDuplicateFile():
             return render_template("duplicate.html",error_message="",mainUrl=mainUrl, isFile = isFile, user_data=user_data, bloDataList =duplicateFilesData,currentDirectoryPath=currentDirectoryPath)
         except ValueError as exc:
             error_message = str(exc)
-            return render_template("error.html", error_message=error_message)
+            return render_template("error.html", error_message=error_message,currentDirectoryPath=user_data["email"]+'/')
     else:
         error_message = "Page not loaded! User Data is missing"
         return render_template("index.html", user_data=user_data, error_message=error_message)
